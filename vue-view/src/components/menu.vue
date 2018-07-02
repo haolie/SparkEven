@@ -16,6 +16,7 @@
         menu:[
           {name:"概览",key:"overView",children:{}},
           {name:"采集",key:"gather",children:{}},
+          {name:"数据查询",key:"dataview",children:{}},
           {name:"微讯",key:"micInfo",children:{}},
         ]
       }

@@ -3,6 +3,7 @@ import Router from 'vue-router'
 import meeter from '@/components/meeter'
 import micInfo from '@/components/micInfo'
 import overView from '@/components/overView'
+import dataView from '@/components/dataview'
 
 Vue.use(Router)
 
@@ -21,6 +22,11 @@ export default new Router({
       path: '/gather',
       name: 'gather',
       component: meeter
+    },
+    {
+      path: '/dataview',
+      name: 'dataview',
+      component: dataView
     },
     {
       path: '/micInfo',

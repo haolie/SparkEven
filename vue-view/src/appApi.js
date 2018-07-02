@@ -6,6 +6,12 @@ let appApi = (c) => {
 
     'G_DATEITEMLIST':'meeter/dates',
     'G_DATECODEITEM':'meeter/dateItem',
+
+    "DV_CODEPAGE":"dataview/codes_page",
+
+    "M_UPLOADFILE":"micinfo/fileUpload",
+    "M_ITEMSLIST_PAGE":"micinfo/itemList_page",
+    "M_ITEM":"micinfo/item",
   }
   return '/express/' + a[c]
 }

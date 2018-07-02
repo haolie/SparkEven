@@ -60,7 +60,7 @@ suporter.prototype.initCodesObj=function (callback) {
 
             conn.query("select max(id) as id from codeface",function (err,items) {
                 maxFaceId=items[0].id;if(!maxFaceId)maxFaceId=0;
-                callback(err,items);
+                if(callback) callback(err,items);
             })
         })
     })
@@ -268,33 +268,37 @@ suporter.prototype.convertface = function (results) {
 suporter.prototype.getfaces = function (item, callback) {
 
     module.exports.getConnction(function (err, conn) {
-        var str = "SELECT * FROM codeface where ";
-        var filter = "";
+        var str = "SELECT * FROM codeface";
+        var filter = "",pagestr;
 
         var tempno;
 
         if (item.no) {
             var tempno = Number(item.no);
-            if (filter.length > 0)filter += " and "
-            filter += "no_id=" + current.getIdByNo(tempno);
+            if (filter.length > 0)filter += " and"
+            filter += " no_id=" + current.getIdByNo(tempno);
         }
 
         if (item.date) {
-            if (filter.length > 0)filter += " and "
-            filter += "_date='" + item.date + "';";
+            if (filter.length > 0)filter += " and"
+            filter += " _date='" + item.date + "'";
         }
 
         if (item.start) {
-            if (filter.length > 0)filter += "and "
-            filter += "_date>'" + item.start + "';";
+            if (filter.length > 0)filter += " and"
+            filter += " _date>'" + item.start + "'";
         }
 
         if (item.end) {
-            if (filter.length > 0)filter += " and "
-            filter += "_date<'" + item.end + "';";
+            if (filter.length > 0)filter += " and"
+            filter += " _date<'" + item.end + "'";
         }
 
-        str += filter;
+        if(filter.length)
+            filter=" where"+filter
+
+
+        str += filter+";";
         conn.query(str, function (err, results) {
             var items = module.exports.convertface(results);
             callback(err, items);
@@ -302,14 +306,13 @@ suporter.prototype.getfaces = function (item, callback) {
     });
 }
 
-suporter.prototype.getfacesbysql = function (sql, callback) {
+
+suporter.prototype.transQeurysql = function (sql, callback) {
     module.exports.getConnction(function (err, conn) {
-        conn.query(sql, function (err, results) {
-            var items = module.exports.convertface(results);
-            callback(err, items);
-        })
+        conn.query(sql, callback)
     });
 }
+
 
 
 suporter.prototype.getcodeface = function (code, date, callback) {
