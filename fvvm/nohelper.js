@@ -101,23 +101,36 @@ nohelper.prototype.getno=function(index,callback){
                     return;
                 }
                 var result=[];
+
+                var indexFun=function (name) {
+                    for(var i=0;i< temp.columnsindexid.length;i++){
+                        if(temp.columnsindexid[i].index_name==name)return i;
+                    }
+
+                }
+
+                var index_start=indexFun("开盘价:前复权"),
+                    index_end=indexFun("收盘价:前复权"),
+                    index_updown=indexFun("涨跌"),
+                    index_codes=0,
+                    index_max=indexFun("最高价:前复权"),
+                    index_min=indexFun("最低价:前复权"),
+                    index_vlo=indexFun("成交量");
+
                 for(var i=0;i<temp.result.length;i++){
-                    if(temp.result[i][5]=="--") continue;
-                    var codestr=temp.result[i][0].toString();
+                    if(temp.result[i][index_start]=="--") continue;
+                    var codestr=temp.result[i][index_codes].toString();
                     codestr=codestr.replace(".sz","");
                     codestr=codestr.replace(".sh","");
-                    if(temp.result[i][8]=='--')temp.result[i][8]=0;
                     result.push({no:codestr,
                         date:module.exports.currentDate,
                         state:0,
                         index:i,
-
+                        lastprice:Number(temp.result[i][index_end]),//收盘价
+                        startprice:Number(temp.result[i][index_start]),//开盘价
                         //lastprice:Number(temp.result[i][2])  ,//现价
-                        dde:Number(temp.result[i][4])  ,//dde 尽量
-                        dde_b:Number(temp.result[i][6])  ,//dde 买入（w）
-                        dde_s:Number(temp.result[i][7])  ,//dde 卖出（w）
-                        mainforce:Number(temp.result[i][8]) ,//主力流向（w）
-                        ud:Number(temp.result[i][5]) });//涨跌 （元）
+                        dde:Number(temp.result[i][index_vlo])  ,//成交量    2018年7月6日 修改
+                        ud:Number(temp.result[i][index_updown]) });//涨跌 （元）
 
                 }
                 if(callback)
@@ -138,11 +151,20 @@ nohelper.prototype.getToken=function(date,callback){
     //     date +
     //     '+%E6%B6%A8%E8%B7%8C' +
     //     date;
-   var url= 'http://www.iwencai.com/stockpick/load-data?typed=1&preParams=&ts=1&f=1&qs=result_rewrite&selfsectsn=&querytype=&searchfilter=&tid=stockpick&w=dde' +
-       date +
-       '+%E6%B6%A8%E8%B7%8C' +
-       date +
-       '&queryarea='
+
+    //2018年7月6日
+   // var url= 'http://www.iwencai.com/stockpick/load-data?typed=1&preParams=&ts=1&f=1&qs=result_rewrite&selfsectsn=&querytype=&searchfilter=&tid=stockpick&w=dde' +
+   //     date +
+   //     '+%E6%B6%A8%E8%B7%8C' +
+   //     date +
+   //     '&queryarea='
+
+    var url= 'http://www.iwencai.com/stockpick/load-data?typed=1&preParams=&ts=1&f=1&qs=result_rewrite&selfsectsn=&querytype=&searchfilter=&tid=stockpick&w=%E6%B6%A8%E8%B7%8C%20' +
+        date +
+        '%20%E6%B6%A8%E5%B9%85' +
+        date +
+        '&queryarea='
+
    // url='/stockpick/search?typed=1&preParams=&ts=1&f=3&qs=pc_%7Esoniu%7Estock%7Estock%7Ehistory%7Equery&selfsectsn=&querytype=&searchfilter=&tid=stockpick&w=dde2017-07-25+%E6%B6%A8%E8%B7%8C2017-07-25';
     var length=0;
     var chunks=[];

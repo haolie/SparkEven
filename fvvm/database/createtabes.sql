@@ -33,6 +33,8 @@ state tinyint DEFAULT 0,
 primary key (id)
 );
 
+insert into tbl_codes(id,_no) values(0,"1912261");
+
 CREATE TABLE time_price(
 face_id MEDIUMINT UNSIGNED NOT NULL,
 time SMALLINT UNSIGNED NOT NULL,
