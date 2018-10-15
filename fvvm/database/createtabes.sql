@@ -62,6 +62,10 @@ per smallint,
 primary key (id)
 );
 
+alter table codeface add volume BIGINT UNSIGNED;
+alter table codeface add turnoverRate SMALLINT UNSIGNED;
+alter table codeface add turnover BIGINT UNSIGNED;
+
 CREATE TABLE micInfo(
   no_id SMALLINT UNSIGNED NOT NULL,
   infoDate DATE NOT NULL,

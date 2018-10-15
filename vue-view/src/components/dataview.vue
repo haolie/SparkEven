@@ -26,8 +26,9 @@
             <td>开盘</td>
             <td>收盘</td>
             <td>涨跌</td>
-            <td>dde_b</td>
-            <td>dde_s</td>
+            <td>换手率</td>
+            <td>成交量</td>
+            <td>成交额</td>
           </tr>
           </thead>
           <tbody>
@@ -39,8 +40,9 @@
             <td>{{item.startprice}}</td>
             <td>{{item.lastprice}}</td>
             <td>{{item.ud}}</td>
-            <td>{{item.dde_b}}</td>
-            <td>{{item.dde_s}}</td>
+            <td>{{item.turnoverRate}}</td>
+            <td>{{item.volume}}</td>
+            <td>{{item.turnover}}</td>
           </tr>
           </tbody>
         </table>
