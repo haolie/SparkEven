@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body >
+<div id="time" style="height: 100%;font-size: 180px;background: black;color: gainsboro;"></div>
+</body>
+<style>
+  html,body{
+    width:100% !important;
+    height:100% !important;
+    background: black;
+    margin: 0;
+  }
+</style>
+<script>
+
+  var fun=function () {
+     var div=document.getElementById('time').innerText=new Date().toLocaleTimeString()
+    setTimeout(fun,1000)
+  }
+  fun()
+
+  var inherit = function(child,parent) {
+    var Super = function(){};
+    Super.prototype = parent.prototype;
+    child.prototype = new Super();
+    child.prototype.constructor = child
+  };
+
+  var Grap=function () {
+  }
+  Grap.prototype.talk=function () {
+    console.log("i am Grap")
+  }
+
+  var Control=function () {
+    Grap.call(this)
+  }
+  inherit(Control,Grap)
+  Control.prototype.talk=function () {
+    Grap.prototype.talk.apply()
+    console.log("i am Control")
+
+  }
+
+  new Control().talk()
+
+
+</script>
+</html>

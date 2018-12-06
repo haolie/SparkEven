@@ -12,6 +12,9 @@ let appApi = (c) => {
     "M_UPLOADFILE":"micinfo/fileUpload",
     "M_ITEMSLIST_PAGE":"micinfo/itemList_page",
     "M_ITEM":"micinfo/item",
+
+    'DV_KLINE':'dataview/facesInDate',
+    'DV_DATELINE':"dataview/lineData"
   }
   return '/express/' + a[c]
 }

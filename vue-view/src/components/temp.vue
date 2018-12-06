@@ -17,7 +17,7 @@
     methods:{
 
     },
-    wathc:{},
+    watch:{},
 
     created:function () {
       _this=this;

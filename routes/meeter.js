@@ -32,6 +32,30 @@ router.get('/dateItem', function(req, res, next) {
     res.send(tools.createBaseRespon( list) );
 });
 
+/* 查询某日的条目信息 */
+router.get('/progress', function(req, res, next) {
+    var obj=[]
+    meeter.progress.forEach(function (p) {
+        var temp={
+            hasworker:p.worker?"1":0,
+            pid:p.worker?p.worker.pid:'',
+            state:p.state,
+            item:null,
+        }
+
+        if(temp.pid&&p.item)temp.item={
+            no:p.item.no,
+            date:p.item.date
+        }
+
+        obj.push(temp)
+    })
+
+
+    res.send(tools.createBaseRespon( obj) );
+});
+
+
 
 
 module.exports = router;

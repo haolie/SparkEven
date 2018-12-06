@@ -14,9 +14,9 @@ var path = require('path');
 var fs= require('fs');
 var fork = require('child_process').fork;
 var request=require('request');
-var childProgresscount=1;
+var childProgresscount=3;
 var tool= require('./tools.js');
-var downfile=0,savedb=0;
+var downfile=1,savedb=1;
 
 var stateObj={};
 
@@ -349,7 +349,7 @@ DataMeeter.prototype.startwork=function(){
 DataMeeter.prototype.sendWorker=function(p){
   var work=module.exports.dataContext.getItem();
   if(work)work.savestate=1;
-  else return false;
+  else work=null;
 
 
   p.item=work;
@@ -369,42 +369,48 @@ DataMeeter.prototype.createChild=function(p){
   p.worker= fork( path.join(__dirname, "DataMeeter_worker.js"))
   p.worker.on("message",function(msg,b){
     // console.log(msg);
-    msg=JSON.parse(msg);
-    if(msg.type=="state"){
-      module.exports.progress.forEach(function(p,index){
-        if(p.worker.pid==msg.id){
-          p.state=msg.msg;
-        }
-      })
-    }
-    else  if(msg.type=="result"){
-      //module.exports.console(JSON.stringify(msg));
-      module.exports.progress.forEach(function(p,index){
-        if(p.worker.pid==msg.id){
-          var tm= p.item;
-          if(!tm)return;
-          tm.savestate=2;//-1：未处理  0：已下载 1：正在处理 2：已完成
-          var ts=" 保存成功";
-          if(msg.msg.result){
-            tm.trytimes+=1;
-            if(tm.trytimes>=3)msg.savestate=4;
-            else {
-              msg.savestate=0;
-              module.exports.dataContext.items.push(tm)
-            }
-            ts=" 保存失败 times "+tm.trytimes
+      try{
+          msg=JSON.parse(msg);
+          if(msg.type=="state"){
+              module.exports.progress.forEach(function(p,index){
+                  if(p.worker.pid==msg.id){
+                      p.state=msg.msg;
+                  }
+              })
           }
-          var ts=" 保存成功"
-          module.exports.console(tm.date+" "+tm.no+ ts +" "+tm.index);
-          p.item=null;
-          module.exports.sendWorker(p);
-        }
-      })
+          else  if(msg.type=="result"){
+              //module.exports.console(JSON.stringify(msg));
+              module.exports.progress.forEach(function(p,index){
+                  if(p.worker.pid==msg.id){
+                      var tm= p.item;
+                      if(!tm)return;
+                      tm.savestate=2;//-1：未处理  0：已下载 1：正在处理 2：已完成
+                      var ts=" 保存成功";
+                      if(msg.msg.result){
+                          tm.trytimes+=1;
+                          if(tm.trytimes>=3)msg.savestate=4;
+                          else {
+                              msg.savestate=0;
+                              module.exports.dataContext.items.push(tm)
+                          }
+                          ts=" 保存失败 times "+tm.trytimes
+                      }
+                      var ts=" 保存成功"
+                      module.exports.console(tm.date+" "+tm.no+ ts +" "+tm.index);
+                      p.item=null;
+                      module.exports.sendWorker(p);
+                  }
+              })
 
-    }
-    else  if(msg.type=="console"){
-      module.exports.console(msg.msg);
-    }
+          }
+          else  if(msg.type=="console"){
+              module.exports.console(msg.msg);
+          }
+      }catch (e) {
+          module.exports.console(msg);
+      }
+
+
   });
   p.worker.on("create",function(){
     p.state="free";
@@ -465,7 +471,7 @@ DataMeeter.prototype.start=function() {
 
     setTimeout(fun,1000);
   }
-  //setTimeout(fun,5000);
+  setTimeout(fun,50000);
 }
 
 module.exports=new DataMeeter();

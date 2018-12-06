@@ -6,6 +6,12 @@ import appApi from '@/appApi'
 let Http = () => {}
 
 Http.prototype = {
+  request(api,params,callback,type){
+    if(!type)type='get'
+    this[type]({api:api,params:params}).then(data=>{
+      if(callback)callback(data)
+    },(res)=>{  _this.$store.commit('showAlertv', {text: res}) });
+  },
   get (o) {
     o.type = 'get'
     return this.xhr(o)

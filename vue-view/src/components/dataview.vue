@@ -32,7 +32,7 @@
           </tr>
           </thead>
           <tbody>
-          <tr v-for="item in codeitems"  >
+          <tr v-for="item in codeitems"  @click="onrowclick(item)">
             <td>{{item.no}}</td>
             <td>{{item.date}}</td>
             <td>{{item.min}}</td>
@@ -87,11 +87,15 @@
           _this.total=data.totalRecord;
           _this.queryParams.pageIndex=Number(data.pageIndex) ;
         },(res)=>{  _this.$store.commit('showAlertv', {text: res}) });
+      },
+      onrowclick(row){
+        var path='#/chartPanel/'+row.no+'?date='+row.date
+        window.location.href=path
       }
     },
     watch:{
       "queryParams.date":function (d) {
-        if(d||d=="null")queryParams.date=""
+        if(d||d=="null")_this.queryParams.date=""
       }
     },
 

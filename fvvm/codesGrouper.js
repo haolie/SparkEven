@@ -12,19 +12,19 @@ var grouper = function () {
 }
 
 var group = function () {
-  var date = "2018-7-13", path = "D:\\d\\", index = 0;
+  var date = "2018-10-19", path = "D:\\d\\", index = 0;
   fs.readFile(path + "old.txt", function (err, bytesRead) {
 
-    var oldcodes = bytesRead.toString().split("\r");
-    var oldObj = {}
-    oldcodes.forEach(function (c) {
-      c=c.replace(/\n/,"");
-      c=c.replace(/\n/,"");
-      c=c.replace(/ /,"");
-      oldcodes[c] = 1;
-    })
+   // var oldcodes = bytesRead.toString().split("\r");
+    var oldObj = {},oldcodes={}
+    // oldcodes.forEach(function (c) {
+    //   c=c.replace(/\n/,"");
+    //   c=c.replace(/\n/,"");
+    //   c=c.replace(/ /,"");
+    //   oldcodes[c] = 1;
+    // })
 
-    nohelper.getallnofromweb("", function (err, codes) {
+    nohelper.getallnofromweb("date", function (err, codes) {
       var list = [];
       codes.forEach(function (c) {
 

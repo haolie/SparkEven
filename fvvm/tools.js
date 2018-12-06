@@ -76,7 +76,7 @@ tool.prototype.console = function (item) {
     if(typeof item=="object") item=JSON.stringify(item);
 
     if (process.send)
-        module.exports.sendMsg(item, "console");
+        process.send(item.toString());
     else
         console.log(item);
 }

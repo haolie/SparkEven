@@ -26,6 +26,10 @@ primary key (_no,_date)
 
 2.0
 
+GRANT all privileges ON *.* TO 'mysql'@'%' IDENTIFIED BY '123456' WITH GRANT OPTION;
+
+mysqld --initialize --user=mysql --console
+
 CREATE TABLE tbl_codes(
 id SMALLINT UNSIGNED NOT NULL,
 _no MEDIUMINT UNSIGNED NOT NULL,
@@ -57,6 +61,9 @@ dde BIGINT,
 dde_b BIGINT UNSIGNED,
 dde_s BIGINT UNSIGNED,
 face TINYINT UNSIGNED,
+volume BIGINT UNSIGNED,
+turnoverRate SMALLINT UNSIGNED,
+turnover BIGINT UNSIGNED,
 state TINYINT,
 per smallint,
 primary key (id)
@@ -71,3 +78,14 @@ CREATE TABLE micInfo(
   infoDate DATE NOT NULL,
   primary key (infoDate,no_id)
   );
+  
+ select count(*),_date from codeface group by _date;
+
+--mysqld  --initialize
+--mysqld --install
+--net start MySQL
+--net stop MySQL
+--sc delete MySQL
+--mysqld -remove
+
+select b._change,b.lastprice,c.* from tbl_codes as a inner join codeface as b on a.id=b.no_id inner join time_price as c on b.id=c.face_id where a._no=1600960 and b._date='2018-11-09';

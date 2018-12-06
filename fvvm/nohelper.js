@@ -66,6 +66,7 @@ nohelper.prototype.getallnofromweb=function(date,callback){
             }
 
 
+            tools.console( 'get codes from web :'+ allcodes.length)
             callback(null,allcodes);
         })
 
@@ -239,7 +240,7 @@ nohelper.prototype.getToken=function(date,callback){
             var r = repl.start({ prompt: 'token  failed> ', eval: function myEval(cmd, context, filename, callback) {
                     callback(null, cmd);
                 }, writer: function myWriter(output) {
-                    options.headers.Cookie=output
+                    //options.headers.Cookie=output
                     r.close()
                     tools.HttpRequest(options,requsetCallBack)
                     return
@@ -290,7 +291,7 @@ nohelper.prototype.getwebDates=function(start,callback){
         "&fields=TCLOSE;HIGH;LOW;TOPEN;LCLOSE;CHG;PCHG;VOTURNOVER;VATURNOVER";
 
     var file=path.join(__dirname, 'datafiles/sh000001.xls')
-    console.log(file)
+    tools.console(file)
     var stream = fs.createWriteStream(file);
     request(uri).pipe(stream).on('close', function(err,result){
         fs.readFile(file, function (err,bytesRead) {
@@ -365,6 +366,7 @@ nohelper.prototype.getallno=function(date,getallnocallback){
             else{
                 items.push({no:global.shcode,state:0 ,date:items[0].date})
                 dbsuport.savecodefaces(items,function(err,result){
+                    tools.console( 'save codes  :'+ items.length)
                     getallnocallback(null,items);
                 })
             }

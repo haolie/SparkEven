@@ -9,6 +9,7 @@ var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var dataview = require('./routes/dataview');
  var micinfo = require('./routes/micinfo');
+var meeter = require('./routes/meeter');
 
 var app = express();
 
@@ -28,7 +29,7 @@ app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use("/dataview",dataview);
  app.use("/micinfo",micinfo);
-
+app.use("/meeter",meeter);
 
 
 // catch 404 and forward to error handler

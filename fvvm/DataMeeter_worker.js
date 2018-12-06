@@ -32,6 +32,7 @@ worker.prototype.sendMsg = function (msg, type) {
 
 worker.prototype.saveToDb = function (item, allcallback) {
   module.exports.getValuesFromfile(item, function (err, items) {
+    
     if (err) {
       module.exports.console(item.no + ": 获取文件数据失败");
       allcallback(1, 0);
@@ -39,6 +40,7 @@ worker.prototype.saveToDb = function (item, allcallback) {
     }
 
     dbsuport.saveTimePrice(items, function (err, result) {
+        module.exports.console( 'saveTimePrice  '+ (new Date().valueOf()-module.exports.time))
       if (err) {
         module.exports.console( item.no+" 数据保存失败保存失败");
         allcallback(1, 1);
@@ -60,6 +62,7 @@ worker.prototype.saveToDb = function (item, allcallback) {
           //module.exports.console( face.startprice+"pricepricepricepricepricepricepriceprice");
 
           dbsuport.updatacodeface(face, function (err, s) {
+			    module.exports.console( 'updatacodeface  '+ (new Date().valueOf()-module.exports.time))
             allcallback(0, true);
           });
         }
@@ -87,11 +90,11 @@ worker.prototype.getValuesFromfile = function (item, allcallback) {
         if(err){
           try{
             fs.unlink(file,function () {
-
+                module.exports.console("删除文件：" + file);
             });
           }catch (ex){}
           module.exports.console(ex.toString())
-          module.exports.console("删除文件：" + file);
+
           allcallback(2, null)
           return;
         }
@@ -126,6 +129,8 @@ worker.prototype.getValuesFromfile = function (item, allcallback) {
   })
 }
 
+worker.prototype.time=0
+
 worker.prototype.start = function () {
 
   //2018-01-02_601636
@@ -150,9 +155,10 @@ worker.prototype.start = function () {
       var item = msg.item;
       if (item != null) {
         state = "working";
-
+          module.exports.time=new Date().valueOf()
         module.exports.saveToDb(item, function (err, result) {
           //保存成功 module.exports.console(" saveToDb saveToDb saveToDb saveToDb");
+            module.exports.console( 'totaltime  '+ (new Date().valueOf()-module.exports.time))
           module.exports.sendMsg({
             index: item.index,
             result: err

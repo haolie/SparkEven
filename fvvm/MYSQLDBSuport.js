@@ -8,6 +8,7 @@ var dateutil = require('date-utils');
 var codeface = "codeface";
 var time_price = "time_price";
 var process = require('process');
+var tools= require('./tools.js');
 var util = require('util');
 global.shcode = 912261;
 var maxCodeId=-1;
@@ -30,7 +31,7 @@ suporter.prototype.getConnction = function (callback) {
     module.exports.connctions[curindex] = mysql.createConnection({
       host: 'localhost',
       user: 'mysql',
-      password: '123456',
+     // password: '123456',
       database: 'test',
       multipleStatements:true,
       useConnectionPooling: true
@@ -76,7 +77,7 @@ suporter.prototype.getNoById=function (id) {
 
 suporter.prototype.getIdByNo=function (no) {
   if(no==global.shcode){
-    console.log(global.shcode);
+      tools.console(global.shcode);
   }
   no=Number(no);
   if(no<1000000)no+=1000000;
@@ -148,7 +149,7 @@ suporter.prototype.saveTimePrice = function (timevalues, allcallback) {
     }
     else {
       if (allcallback)allcallback(null, "");
-      console.log("数据库连接失败");
+        tools.console("数据库连接失败");
     }
   });
 };
@@ -183,31 +184,56 @@ suporter.prototype.getFaceId=function(date,no,callback){
 
 
 suporter.prototype.getValueByDayNo = function (item, callback) {
-  var date = item.date;
-  if(!tool.isDate(date))
-    date=new Date(date);
+  if(!item.date||!item.no){
+    callback(1,[])
+      return
+  }
+  var no= Number(item.no)
+    if(no<1000000)no+=1000000
 
-  current.getFaceId(date,item.no,function (err,id) {
+
+    var mysql="select b.startprice as startprice,c.* from tbl_codes as a inner join codeface as b on a.id=b.no_id inner join time_price as c on b.id=c.face_id where a._no=" +
+        no +
+        " and b._date='" +
+        item.date +
+        "';"
+
     current.getConnction(function (err,conn) {
-      conn.query('select * from time_price where face_id="' +id +'" order by time',function (err,result) {
-        var items = [];
-        var no=item.no>1000000?item.no-1000000:item.no;
-        if (result && result.length > 0) {
-          for (var i in result) {
-            items.push({
-              no: no,
-              time: date.addSeconds(result[i].time),
-              price: result[i].price / 100,
-              trade_type: result[i].trade_type,
-              volume: result[i].volume * 100
-            })
-          }
-        }
+        conn.query(mysql,function (err,result) {
+            debugger
+            if(err||result.length==0){
+                callback(err, []);
+                return
+            }
+            var items = [];
+            var dateTime=new Date(item.date)
+            var startPrice=Number(result[0].startprice)
 
-        callback(err, items);
-      })
+            var getTime=function (time) {
+                var s=time%60
+                var m=((time-s)/60)%60
+                var h=Math.ceil( (time-m*60-s)/(60*60))+9
+                s=s>=10?s:'0'+s
+                m=m>=10?m:'0'+m
+                h=h>=10?h:'0'+h
+                return h+':'+m+':'+s
+            }
+
+
+            for (var i in result) {
+
+                items.push({
+                    no: no,
+                    time: result[i].time,
+                    price: (startPrice+ result[i].price) / 100,
+                    trade_type: result[i].trade_type,
+                    volume: result[i].volume * 100
+                })
+            }
+
+            callback(err, items);
+        })
     })
-  })
 
 }
 
@@ -344,7 +370,7 @@ suporter.prototype.savecodefaces = function (items, callback) {
     module.exports.getConnction(function (err, conn) {
       conn.query('delete from codeface where _date="'+items[0].date +'";',function (err,r) {
         async.mapLimit(lists, 1, function (list, mapcallback) {
-          var str = "INSERT INTO codeface(id,_date,no_id,_min,_max,_change,lastprice,startprice,volume,turnoverRate,turnover,face,dde,dde_b,dde_s,state)" +
+          var str = "INSERT delayed INTO codeface(id,_date,no_id,_min,_max,_change,lastprice,startprice,volume,turnoverRate,turnover,face,dde,dde_b,dde_s,state)" +
             " VALUES";
           for (var i in list) {
             var item = list[i];
@@ -473,7 +499,7 @@ suporter.prototype.updatacodeface = function (item, callback) {
           str+=temp;
         }
         conn.query(str, function (err, r) {
-          console.log(Date.now() )
+          tools.console(Date.now() )
           if (aycb)aycb(err, r)
         })
       },function(err,result){
@@ -490,6 +516,10 @@ suporter.prototype.updatacodeface = function (item, callback) {
 
 
 var current = module.exports = new suporter();
+
+// current.getValueByDayNo({no:600960,date:'2018-11-09'},function () {
+//
+// })
 
 //var upDateItem = function (item, callback) {
 //
