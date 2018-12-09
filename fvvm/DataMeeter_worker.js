@@ -10,6 +10,7 @@ var lcsv = require('./localCSV.js');
 //var xls_tool = require('xls-to-json');
 var process = require('process');
 var fs = require('fs');
+var path = require('path');
 var util = require('util');
 
 var worker = function () {
@@ -32,12 +33,13 @@ worker.prototype.sendMsg = function (msg, type) {
 
 worker.prototype.saveToDb = function (item, allcallback) {
   module.exports.getValuesFromfile(item, function (err, items) {
-    
+
     if (err) {
       module.exports.console(item.no + ": 获取文件数据失败");
       allcallback(1, 0);
       return;
     }
+
 
     dbsuport.saveTimePrice(items, function (err, result) {
         module.exports.console( 'saveTimePrice  '+ (new Date().valueOf()-module.exports.time))
@@ -61,10 +63,15 @@ worker.prototype.saveToDb = function (item, allcallback) {
 
           //module.exports.console( face.startprice+"pricepricepricepricepricepricepriceprice");
 
-          dbsuport.updatacodeface(face, function (err, s) {
-			    module.exports.console( 'updatacodeface  '+ (new Date().valueOf()-module.exports.time))
-            allcallback(0, true);
-          });
+            fs.open(path.join(__dirname, 'saveCatch/'+item.faceId), "a", function (err) {
+                module.exports.console( 'fileTime  '+ (new Date().valueOf()-module.exports.time))
+                allcallback(0, true);
+            });
+
+          // dbsuport.updatacodeface(face, function (err, s) {
+			//     module.exports.console( 'updatacodeface  '+ (new Date().valueOf()-module.exports.time))
+          //   allcallback(0, true);
+          // });
         }
         else {
           allcallback(0, true);
@@ -77,23 +84,24 @@ worker.prototype.saveToDb = function (item, allcallback) {
 }
 
 worker.prototype.getValuesFromfile = function (item, allcallback) {
+
   if (!(item.no && item.date)) {
     allcallback(null, null);
     return;
   }
   var file = item.file;
-
   fs.exists(file, function (exist) {
     if (exist) {
       lcsv.FileToJson(file, function (err, result) {
-
         if(err){
+            module.exports.console("出错出错出错出错" );
           try{
             fs.unlink(file,function () {
                 module.exports.console("删除文件：" + file);
             });
-          }catch (ex){}
-          module.exports.console(ex.toString())
+          }catch (ex){
+              module.exports.console("删除文件出错" + file);
+          }
 
           allcallback(2, null)
           return;
@@ -124,6 +132,7 @@ worker.prototype.getValuesFromfile = function (item, allcallback) {
       })
     }
     else {
+        module.exports.console("文件不存在："+file);
       allcallback(1, null);
     }
   })

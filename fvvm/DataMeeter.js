@@ -14,8 +14,8 @@ var path = require('path');
 var fs= require('fs');
 var fork = require('child_process').fork;
 var request=require('request');
-var childProgresscount=3;
-var tool= require('./tools.js');
+var childProgresscount=5;
+var tools= require('./tools.js');
 var downfile=1,savedb=1;
 
 var stateObj={};
@@ -160,7 +160,7 @@ DataMeeter.prototype.downDateFiles=function(date,callback){
           //    datetime.getFullYear() + "/" +
           //    datetime.toLocaleDateString().replace(/-/g,'') +"/";
 
-          url="http://stock.gtimg.cn/data/index.php?appn=detail&action=download";
+          var url="http://stock.gtimg.cn/data/index.php?appn=detail&action=download";
           var codestr="sz"+ item.no;
           if(Number(item.no)>=600000)codestr="sh"+ item.no;
           var datestr=date.replace('-','');
@@ -267,7 +267,7 @@ DataMeeter.prototype.getQueryDates=function(callback){
   var tempdate=new Date(global.datestr);
   tempdate.add('d',-30);
   tempdate=tempdate.toLocaleDateString();
-  tempdate="2018-01-01";
+  tempdate="2018-06-01";
   nohelper.getwebDates(tempdate,function(err,dates){
     var date=[];
     if(dates==null&&dates.length==0){
@@ -295,6 +295,35 @@ DataMeeter.prototype.getQueryDates=function(callback){
     });
   });
 }
+
+DataMeeter.prototype.updataFaces=function(callback){
+ fs.readdir(path.join(__dirname, 'saveCatch'),function (err,files) {
+   if(!files.length){
+       callback()
+       return
+   }
+    var arraylist= tools.getSpiedList(files,100)
+    async.mapLimit(arraylist,1,function (list,cb) {
+        dbsuport.updateFaceState(list,function (err) {
+         cb()
+        })
+    },function () {
+        async.mapLimit(files,5,function (file,dcb) {
+            try{
+                fs.unlink(path.join(__dirname, 'saveCatch/'+file),function () {
+                    dcb()
+                })
+            }catch (e) {
+                dcb()
+            }
+
+        },function () {
+            callback()
+        })
+    })
+ }) 
+}
+
 
 DataMeeter.prototype.consoleTimes=function(str){
   var ms=new Date().valueOf()-starttime.valueOf();
@@ -368,7 +397,7 @@ DataMeeter.prototype.createChild=function(p){
   p.state="working";
   p.worker= fork( path.join(__dirname, "DataMeeter_worker.js"))
   p.worker.on("message",function(msg,b){
-    // console.log(msg);
+    //console.log(msg);
       try{
           msg=JSON.parse(msg);
           if(msg.type=="state"){
@@ -395,7 +424,7 @@ DataMeeter.prototype.createChild=function(p){
                           }
                           ts=" 保存失败 times "+tm.trytimes
                       }
-                      var ts=" 保存成功"
+
                       module.exports.console(tm.date+" "+tm.no+ ts +" "+tm.index);
                       p.item=null;
                       module.exports.sendWorker(p);
@@ -436,6 +465,16 @@ DataMeeter.prototype.startChildWorker=function(){
   for (var i = 0; i < childProgresscount; i++) {
     module.exports.createChild();
   }
+
+  var fun=function () {
+      setTimeout(function () {
+          module.exports.updataFaces(function () {
+              fun()
+          })
+      },5000)
+  }
+
+  //fun()
 }
 
 DataMeeter.prototype.isdowning=false;
@@ -471,13 +510,15 @@ DataMeeter.prototype.start=function() {
 
     setTimeout(fun,1000);
   }
-  setTimeout(fun,50000);
+  setTimeout(fun,10000);
 }
 
 module.exports=new DataMeeter();
 
 dbsuport.initCodesObj(function () {
-  module.exports.start();
+    module.exports.updataFaces(function () {
+        module.exports.start();
+    })
 })
 
 

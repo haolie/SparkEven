@@ -31,7 +31,7 @@ suporter.prototype.getConnction = function (callback) {
     module.exports.connctions[curindex] = mysql.createConnection({
       host: 'localhost',
       user: 'mysql',
-     // password: '123456',
+      password: '123456',
       database: 'test',
       multipleStatements:true,
       useConnectionPooling: true
@@ -273,7 +273,8 @@ suporter.prototype.convertface = function (results) {
   if (results && results.length)
     for (var i in results) {
       items.push({
-        no: current.getNoById(results[i].no_id).toString().substring(1),
+        faceId:results[i].id,
+          no: current.getNoById(results[i].no_id).toString().substring(1),
         date:  new Date(results[i]._date).toFormat("YYYY-MM-DD"),
         min: results[i]._min / 100,
         max: results[i]._max / 100,
@@ -374,8 +375,9 @@ suporter.prototype.savecodefaces = function (items, callback) {
             " VALUES";
           for (var i in list) {
             var item = list[i];
+            item.faceId=++maxFaceId
             str += '(' +
-              (++maxFaceId) +',' +
+              (item.faceId) +',' +
               '"' + item.date + '"' + ',' +
               current.getIdByNo(item.no)+ ',' +
               (module.exports.getValueSql(item, 'min') * 100) + ',' +
@@ -458,6 +460,21 @@ suporter.prototype.saveNos=function (codes,callback) {
       callback(0,0);
     })
   })
+}
+
+suporter.prototype.updateFaceState=function(items,callback){
+  var idstr="("
+    items.forEach(function (item,i) {
+        if(i)idstr+=','
+        idstr+=item
+    })
+    idstr +=")"
+    module.exports.getConnction(function (err,conn) {
+      var str='update codeface set state=1 where id in '+idstr
+        conn.query(str, function (err, r) {
+            callback(err,r)
+        })
+    })
 }
 
 suporter.prototype.updatacodeface = function (item, callback) {

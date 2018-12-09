@@ -7,6 +7,8 @@
           v-model="queryParams.date"
           type="date"
           value-format="yyyy-MM-dd"
+          format="yyyy-MM-dd"
+
           style="float: left;margin-left: 20px"
           placeholder="选择日期">
         </el-date-picker>
@@ -95,7 +97,7 @@
     },
     watch:{
       "queryParams.date":function (d) {
-        if(d||d=="null")_this.queryParams.date=""
+        if(!d||d=="null")_this.queryParams.date=""
       }
     },
 
