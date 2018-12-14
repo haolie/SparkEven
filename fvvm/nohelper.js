@@ -98,7 +98,7 @@ nohelper.prototype.getno=function(index,callback){
                 'Host':"www.iwencai.com",
 
                 "User-Agent":'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.75 Safari/537.36',
-                'Cookie':'PHPSESSID=8kj3mqbbsij14id6f3403u03f1; v=AsnAGHLn926_m4sa8g40WcE62P4nFr1IJwrh3Gs_RbDvsudos2bNGLda8ar7; cid=nc6hgumel0h6oscbpn8fhibtf31497502968; ComputerID=nc6hgumel0h6oscbpn8fhibtf31497502968'
+                'Cookie':'cid=749ab030ef66aacd83c77714a04171211540123602; ComputerID=749ab030ef66aacd83c77714a04171211540123602; v=AlFg0G7D6XO4rwVnyDRs9NonYFbovsUwbzJpRDPmTZg32nuAew7VAP-CeRXA; PHPSESSID=ca350c4407be44d11e541cf27e292359'
             }
         };
 
@@ -222,7 +222,7 @@ nohelper.prototype.getToken=function(date,callback){
 
             "User-Agent":'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.75 Safari/537.36',
             //'Cookie':'PHPSESSID=8kj3mqbbsij14id6f3403u03f1; v=AsnAGHLn926_m4sa8g40WcE62P4nFr1IJwrh3Gs_RbDvsudos2bNGLda8ar7; cid=nc6hgumel0h6oscbpn8fhibtf31497502968; ComputerID=nc6hgumel0h6oscbpn8fhibtf31497502968'
-            'Cookie':'cid=2eb414ff675d8125147fc689c2569d7a1538712169; ComputerID=2eb414ff675d8125147fc689c2569d7a1538712169; PHPSESSID=4a956d32cb5bff85cbf6de4cd97716c3; v=AiKotn5ejcUgMZEZsAsIJiJsc6OHcyQW2H8a4my6ThVAP8gVVAN2nagHatM_'
+            'Cookie':'cid=d4c2211c0c0727709a437f915ab85d271544094070; ComputerID=d4c2211c0c0727709a437f915ab85d271544094070; PHPSESSID=fe9849dae2c982281ff362eeae5643c7; v=ApKLNI3FGj6fWmZC5koKV2O041N3o5YJyKeKYVzrvsUwbzzFRDPmTZg32nYv'
         }
     };
 
