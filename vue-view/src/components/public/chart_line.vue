@@ -46,11 +46,15 @@
           title: {
             text: '动态数据 + 时间坐标轴'
           },
+          grid:{
+            width:'100%',
+            height:'100%',
+          },
           tooltip: {
             trigger: 'axis',
             formatter: function (params) {
-
-              return '';
+              var temp=_this.dataItems[params[0].dataIndex]
+              return '时间：'+params[0].axisValue+'<br/>'+'时间：'+temp.time+'<br/>'+'value：'+temp.price+'<br/>'+'volume：'+temp.volume+'<br/>'+'type：'+temp.trade_type;
             },
             axisPointer: {
               animation: false
@@ -100,7 +104,6 @@
       _this=this;
     },
     mounted:function () {
-
       this.setChart()
     }
   }
