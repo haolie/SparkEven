@@ -270,6 +270,7 @@ DataMeeter.prototype.getQueryDates=function(callback){
   tempdate="2018-06-01";
   nohelper.getwebDates(tempdate,function(err,dates){
     var date=[];
+      dates=dates.concat(['2019-01-02','2019-01-03','2019-01-04'])
     if(dates==null&&dates.length==0){
       date.push(global.datestr);
       callback(null,date)
@@ -321,7 +322,7 @@ DataMeeter.prototype.updataFaces=function(callback){
             callback()
         })
     })
- }) 
+ })
 }
 
 
@@ -512,6 +513,14 @@ DataMeeter.prototype.start=function() {
   }
   setTimeout(fun,10000);
 }
+
+// var fileset=function(){
+//   var path='';
+//
+//   fs.
+//
+//
+// }
 
 module.exports=new DataMeeter();
 

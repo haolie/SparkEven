@@ -25,6 +25,8 @@ var columnObj=[
   {name:'成交量',index:-1,id:'volume'}
     ]
 
+var codeId='cid=d4c2211c0c0727709a437f915ab85d271544094070; ComputerID=d4c2211c0c0727709a437f915ab85d271544094070; PHPSESSID=b94581a8b48cb0c1efc3d5b3ed163567; v=AhAJsjsfeOHIWSTlqINoOe1e4VVh2fRdFr1IJwrj3Gs-Rb5DsunEs2bNGLFZ'
+
 var nohelper=function Nohelper(){}
 
 nohelper.prototype.currentDate=null;
@@ -98,7 +100,7 @@ nohelper.prototype.getno=function(index,callback){
                 'Host':"www.iwencai.com",
 
                 "User-Agent":'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.75 Safari/537.36',
-                'Cookie':'cid=749ab030ef66aacd83c77714a04171211540123602; ComputerID=749ab030ef66aacd83c77714a04171211540123602; PHPSESSID=7144f907aafc1e89208e6d9d7c3cc4ec; v=AoyVJkdjPMiAjii09cKsRYkKXeG9xTALMmtEM-ZMmtjaKiLXDtUA_4J5FMU1'
+                'Cookie':codeId
             }
         };
 
@@ -222,7 +224,7 @@ nohelper.prototype.getToken=function(date,callback){
 
             "User-Agent":'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.75 Safari/537.36',
             //'Cookie':'PHPSESSID=8kj3mqbbsij14id6f3403u03f1; v=AsnAGHLn926_m4sa8g40WcE62P4nFr1IJwrh3Gs_RbDvsudos2bNGLda8ar7; cid=nc6hgumel0h6oscbpn8fhibtf31497502968; ComputerID=nc6hgumel0h6oscbpn8fhibtf31497502968'
-            'Cookie':'cid=d4c2211c0c0727709a437f915ab85d271544094070; ComputerID=d4c2211c0c0727709a437f915ab85d271544094070; PHPSESSID=7144f907aafc1e89208e6d9d7c3cc4ec; v=AoyVJkdjPMiAjii09cKsRYkKXeG9xTALMmtEM-ZMmtjaKiLXDtUA_4J5FMU1'
+            'Cookie':codeId
         }
     };
 
