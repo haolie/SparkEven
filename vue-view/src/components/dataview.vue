@@ -34,8 +34,8 @@
           </tr>
           </thead>
           <tbody>
-          <tr v-for="item in codeitems"  @click="onrowclick(item)">
-            <td>{{item.no}}</td>
+          <tr v-for="item in codeitems"  >
+            <td><a href="javascript:void(0)" @click="onrowclick(item)">{{item.no}}</a> </td>
             <td>{{item.date}}</td>
             <td>{{item.min}}</td>
             <td>{{item.max}}</td>
