@@ -28,7 +28,7 @@ router.get('/lineData', function(req, res, next){
 router.get('/facesInDate', function(req, res, next){
     var filter=[];
     if(req.query.date&&req.query.date.length)filter.push("_date<='"+req.query.date+"'");
-    var count=20
+    var count=0
     if(req.query.count&&req.query.count.length)
         count=Number(req.query.count)
     if(req.query.no&&req.query.no.length)filter.push(" no_id=" + dbsurport.getIdByNo(req.query.no));
@@ -40,11 +40,11 @@ router.get('/facesInDate', function(req, res, next){
         filter +
         ") as total from codeface"
         +filter+
-        " order by _date desc limit " +
-        0 +
-        "," +
-        count +
-        ";";
+        " order by _date desc"
+    if(count)
+        mysql+=" limit " + 0 +"," + count
+
+    mysql+=";";
 
     console.log(mysql)
 
@@ -83,18 +83,21 @@ router.get('/codes_page', function(req, res, next) {
     if(req.query.no&&req.query.no.length)filter.push(" no_id=" + dbsurport.getIdByNo(req.query.no));
     if(filter.length)
     filter=" where "+filter.join(" and ")
-    var start=(req.query.pageIndex-1)*req.query.pageSize;
+    var size=req.query.pageSize,start;
+    if(size)
+     start=(req.query.pageIndex-1)*req.query.pageSize;
 
 
     var mysql ="select *,(select count(id) from codeface" +
         filter +
-        ") as total from codeface"
-        +filter+
-        " order by id limit " +
+        ") as total from codeface"+filter+" order by id "
+        if(size)
+        mysql+= "limit " +
         start +
         "," +
-        req.query.pageSize +
-        ";";
+        req.query.pageSize
+
+       mysql+= ";";
 
     console.log(mysql)
 

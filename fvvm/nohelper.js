@@ -23,14 +23,29 @@ var columnObj=[
   {name:'换手率',index:-1,id:'turnoverRate'},
   {name:'成交额',index:-1,id:'turnover'},
   {name:'成交量',index:-1,id:'volume'}
+
     ]
 
-var codeId='cid=d4c2211c0c0727709a437f915ab85d271544094070; ComputerID=d4c2211c0c0727709a437f915ab85d271544094070; PHPSESSID=b94581a8b48cb0c1efc3d5b3ed163567; v=AhAJsjsfeOHIWSTlqINoOe1e4VVh2fRdFr1IJwrj3Gs-Rb5DsunEs2bNGLFZ'
+var codeId='PHPSESSID=2a7ecdab3e2f0eb893f2b1372cc3cb81; cid=2a7ecdab3e2f0eb893f2b1372cc3cb811577187851; ComputerID=2a7ecdab3e2f0eb893f2b1372cc3cb811577187851; iwencaisearchquery=dde; user=MDpoYW9saWU6Ok5vbmU6NTAwOjI3NDUwMjY2MDo3LDExMTExMTExMTExLDQwOzQ0LDExLDQwOzYsMSw0MDs1LDEsNDA7MSwxLDQwOzIsMSw0MDszLDEsNDA7NSwxLDQwOzgsMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDEsNDA6Mjc6OjoyNjQ1MDI2NjA6MTU3NzE4ODA3NDo6OjE0MzM3NzYwMjA6MjI3NTI2OjA6MTZlNTk2NzVlODJmMmJkYWVlMjJhOWY3ZWY2NGRjZTQyOmRlZmF1bHRfMzow; userid=264502660; u_name=haolie; escapename=haolie; ticket=80869d523c62e1ecefb6ec8f04a3cd9e; v=AmXn6KSsV2Uvk7O5Kc0h5OaydCqcohk0Y1b9iGdKIRyrfotcL_IpBPOmDVr0'
+var waiteToken=''
 
-var nohelper=function Nohelper(){}
+var nohelper=function Nohelper(){
+}
 
 nohelper.prototype.currentDate=null;
 nohelper.prototype.allItems=null;
+
+nohelper.prototype.startCodeIdListen=function(){
+    var server  =  http.createServer((req,res)=>{
+        //req客户端请求的相关信息,res返回响应信息
+        let url = req.url;
+        //解决中文乱码
+        waiteToken=url.substring(1).replace(/%20/g,'')
+        res.writeHead(200, {'Content-Type': 'text/plain;charset=utf-8'});
+        res.end('访问路径：'+url);
+    }).listen(9001);
+
+}
 
 nohelper.prototype.getallnofromweb=function(date,callback){
     var index=1;
@@ -195,6 +210,7 @@ nohelper.prototype.getToken=function(date,callback){
     //    //     '+%E6%B6%A8%E8%B7%8C' +
     //    //     date +
     //    //     '&queryarea='
+   codeId=waiteToken
     var url= 'http://www.iwencai.com/stockpick/load-data?typed=0&preParams=&ts=1&f=1&qs=result_original&selfsectsn=&querytype=stock&searchfilter=&tid=stockpick&w=%E6%B6%A8%E8%B7%8C' +
       date +
       '+%E4%BB%B7%E6%A0%BC' +
@@ -239,10 +255,30 @@ nohelper.prototype.getToken=function(date,callback){
             if(callback)callback(null,temp);
         }
         catch (e) {
+            console.log('token 过期，等待中……')
+            console.log('token:faile………………')
+            console.log('token:faile………………')
+            console.log('token:faile………………')
+            console.log('token:faile………………')
+            console.log('token:faile………………')
+            console.log('token:faile………………')
+            console.log('token:faile………………')
+            console.log('token:faile………………')
+            console.log('token:faile………………')
+            setTimeout(function () {
+                codeId=waiteToken
+                console.log('token:'+codeId)
+                module.exports.getToken(date,callback)
+                return
+                options.headers.Cookie=codeId
+                tools.HttpRequest(options,requsetCallBack)
+            },10000)
+            return
+
             var r = repl.start({ prompt: 'token  failed> ', eval: function myEval(cmd, context, filename, callback) {
                     callback(null, cmd);
                 }, writer: function myWriter(output) {
-                    //options.headers.Cookie=output
+                    options.headers.Cookie=output
                     r.close()
                     tools.HttpRequest(options,requsetCallBack)
                     return

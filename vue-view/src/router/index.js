@@ -4,6 +4,7 @@ import meeter from '@/components/meeter'
 import micInfo from '@/components/micInfo'
 import overView from '@/components/overView'
 import dataView from '@/components/dataview'
+import dateView from '@/components/dateView'
 import chartPanel from '@/components/dataView/chartPanel'
 
 Vue.use(Router)
@@ -28,6 +29,11 @@ export default new Router({
       path: '/dataview',
       name: 'dataview',
       component: dataView
+    },
+    {
+      path: '/dateview/:date',
+      name: 'dateview',
+      component: dateView
     },
     {
       path: '/chartPanel/:no',

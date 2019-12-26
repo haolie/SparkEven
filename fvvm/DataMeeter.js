@@ -116,6 +116,7 @@ DataMeeter.prototype.downDateFiles=function(date,callback){
         temps.push(c);
     });
 
+    //待检测代码
     if(!downfile){
       module.exports.console("codes saved "+date);
       callback(0,1);
@@ -523,10 +524,11 @@ DataMeeter.prototype.start=function() {
 // }
 
 module.exports=new DataMeeter();
-
+nohelper.startCodeIdListen()
 dbsuport.initCodesObj(function () {
     module.exports.updataFaces(function () {
         module.exports.start();
+
     })
 })
 
