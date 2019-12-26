@@ -138,8 +138,6 @@ DataMeeter.prototype.downDateFiles=function(date,callback){
       return;
     }
 
-
-
     var dateitem={date:date,items:temps};
     module.exports.dataContext.dates[date].state=1;
     async.mapLimit(dateitem.items,2,function(item,mapcb){
