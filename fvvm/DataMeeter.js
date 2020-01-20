@@ -14,7 +14,7 @@ var path = require('path');
 var fs= require('fs');
 var fork = require('child_process').fork;
 var request=require('request');
-var childProgresscount=5;
+var childProgresscount=1;
 var tools= require('./tools.js');
 var downfile=1,savedb=1;
 
@@ -268,10 +268,10 @@ DataMeeter.prototype.getQueryDates=function(callback){
   var tempdate=new Date(global.datestr);
   tempdate.add('d',-30);
   tempdate=tempdate.toLocaleDateString();
-  tempdate="2018-06-01";
+  tempdate="2019-12-20";
   nohelper.getwebDates(tempdate,function(err,dates){
     var date=[];
-      dates=dates.concat(['2019-01-02','2019-01-03','2019-01-04'])
+     // dates=dates.concat(['2019-01-02','2019-01-03','2019-01-04'])
     if(dates==null&&dates.length==0){
       date.push(global.datestr);
       callback(null,date)
@@ -383,6 +383,9 @@ DataMeeter.prototype.sendWorker=function(p){
   else work=null;
 
 
+    if(work&&work.date=='2019-12-13'){
+      debugger
+    }
   p.item=work;
   p.worker.send(JSON.stringify({type:"work",item:work}));
 

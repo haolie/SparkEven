@@ -67,6 +67,13 @@ suporter.prototype.initCodesObj=function (callback) {
   })
 }
 
+suporter.prototype.getTableName=function(date,callback){
+  if(!date) date=new Date()
+    var month=date.getMonth()
+
+}
+
+
 suporter.prototype.getNoById=function (id) {
   for(var i in current.CodesObj){
     if(current.CodesObj[i]==id)return i;
@@ -124,7 +131,7 @@ suporter.prototype.saveTimePrice = function (timevalues, allcallback) {
     item.price=(item.price-start).toFixed(2);
   })
 
-  var lists = tool.getSpiedList(timevalues, 400);
+  var lists = tool.getSpiedList(timevalues, 200);
 
   module.exports.getConnction(function (err, conn) {
     if (err == null) {
@@ -134,9 +141,6 @@ suporter.prototype.saveTimePrice = function (timevalues, allcallback) {
         async.mapLimit(lists, 1, function (items, callback) {
           var insert = 'replace INTO time_price(face_id,time,price,trade_type,volume) VALUES';
           for (var i in items) {
-            if(items[i].volume>16777215){
-                items[i].volume=16777215
-            }
             insert += module.exports.getInsertStr(items[i],id);
             if (i == items.length - 1) insert += ';';
             else insert += ',';

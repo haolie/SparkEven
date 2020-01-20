@@ -89,3 +89,14 @@ CREATE TABLE micInfo(
 --mysqld -remove
 
 select b._change,b.lastprice,c.* from tbl_codes as a inner join codeface as b on a.id=b.no_id inner join time_price as c on b.id=c.face_id where a._no=1600960 and b._date='2018-11-09';
+
+select b._change,b.lastprice,c.* from tbl_codes as a inner join codeface as b on a.id=b.no_id inner join time_price as c on b.id=c.face_id where a._no=1600960 and b._date='2018-11-09';
+
+select a._no,b.id,b._date from tbl_codes as a inner join codeface as b on a.id=b.no_id where b._date='2020-01-03' and a._no=1912261;
+
+delete from time_price where face_id=1704852;
+update codeface set state=0 where id=1704852;
+select id,state from codeface where id=1704852;  
+select id,state from codeface where id=912261;  
+
+//912261   1704858
