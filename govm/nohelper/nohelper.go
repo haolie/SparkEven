@@ -19,7 +19,7 @@ import (
 )
 
 var (
-	newSession = "cid=749ab030ef66aacd83c77714a04171211540123602; ComputerID=749ab030ef66aacd83c77714a04171211540123602; user=MDpoYW9saWU6Ok5vbmU6NTAwOjI3NDUwMjY2MDo3LDExMTExMTExMTExLDQwOzQ0LDExLDQwOzYsMSw0MDs1LDEsNDA7MSwxLDQwOzIsMSw0MDszLDEsNDA7NSwxLDQwOzgsMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDEsNDA6Mjc6OjoyNjQ1MDI2NjA6MTU4MDE3Nzc2MTo6OjE0MzM3NzYwMjA6NTc1MDM5OjA6MTg5NDRlZGNkYzQ4ZGYyZDA3Yzc0NTkxMDcxZWY1YTRiOmRlZmF1bHRfNDow; userid=264502660; u_name=haolie; escapename=haolie; ticket=622037c98e3b4ffa7452e409fe347834; PHPSESSID=6e6724a4a7331b3a8bf7aaabcd9d885c; v=AuHQgF6TG4Wb2rfxxFOkzYRA8Kb4jlWAfwL5lEO23ehHqgvQi95lUA9SCWDQ"
+	newSession = ""
 	lock       sync.Mutex
 )
 
@@ -214,15 +214,16 @@ func GetNocodesFromWeb(date string) map[int]*common.FaceEx {
 		}
 	}
 	allFace := make(map[int]*common.FaceEx)
+	pageCount = 1
 	for i := 0; i < pageCount; i++ {
 		list, ok := getNoFun(tobj.token, i+1, perCount, clMaps)
 		if ok {
-			for _,face:=range list{
-				face.Date=date
-				allFace[face.Code]=face
+			for _, face := range list {
+				face.Date = date
+				allFace[face.Code] = face
 			}
 		}
-		
+
 	}
 
 	// for list := range chl {
@@ -232,10 +233,10 @@ func GetNocodesFromWeb(date string) map[int]*common.FaceEx {
 
 	fmt.Print(len(allFace))
 
-	for i, c := range allFace {
-		fmt.Println(i)
-		c.Println()
-	}
+	// for i, c := range allFace {
+	// 	fmt.Println(i)
+	// 	c.Println()
+	// }
 
 	return allFace
 }
@@ -260,12 +261,12 @@ func GetDatesFromWeb(start string) []string {
 
 	body, err := ioutil.ReadAll(resp.Body)
 	rows, _ := csv.GetRowsFromBytes(body)
-	for i,row:=range rows{
-		if i==0{
+	for i, row := range rows {
+		if i == 0 {
 			continue
 		}
 
-		list=append(list,strings.Split(row[0],",")[0])
+		list = append(list, strings.Split(row[0], ",")[0])
 	}
 	return list
 }

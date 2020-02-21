@@ -66,6 +66,7 @@ func GetFilePath(date string, no int) string {
 	return path
 }
 
+
 func GetSecondsFromStr(timestr string) (int, bool) {
 	strs := strings.Split(timestr, ":")
 	if len(strs) == 3 {

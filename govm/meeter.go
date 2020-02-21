@@ -9,6 +9,7 @@ import (
 
 	"./common"
 	"./common/csv"
+	"./db"
 	"./nohelper"
 )
 
@@ -27,6 +28,18 @@ func main() {
 	//fmt.Println(common.CodeNumToStr(1600222))
 	//fmt.Println(common.CodeNumToStr(1300222))
 	//DownFile("2020-01-20", 1603922)
+	// fs := []*common.CodeFace{}
+	// for _, f := range faces {
+	// 	fs = append(fs, &f.CodeFace)
+	// }
+
+	ds := db.MysqlSuport{}
+	ds.Init()
+	//ds.SaveCodeFaces(fs)
+	fs, _ := ds.GetCodeFaces("", 1912261)
+	for _, f := range fs {
+		f.Println()
+	}
 	GetTimePriceFromFile("E:/VM/common/go/src/SparkEven/govm/datefiles/2020-01-20/2020-01-20_1000006.xls")
 	select {}
 }
