@@ -293,16 +293,29 @@ func (this *MysqlSuport) SplitDB() {
 }
 
 func (this *MysqlSuport) DeleteDate(date string) {
-	sql := fmt.Sprintf("delete from time_price where face_id in(select c.face_id as face_id from tbl_codes as a inner join codeface as b on a.id=b.no_id inner join time_price as c on b.id=c.face_id where b._date='%s');", date)
-	r, err := this.conn.Exec(sql)
-	if err != nil {
-		fmt.Printf("删除失败:%s\n", date)
-		fmt.Println(err)
-		return
-	}
+	fs, _ := this.GetCodeFaces("", 1912261)
+	dcount := len(fs)
+	for i, fc := range fs {
 
-	delNums, _ := r.RowsAffected()
-	fmt.Println(delNums)
+		sql := fmt.Sprintf("select id from codeface where _date='%s' and no_id>0;", fc.Date)
+		frows, _ := this.conn.Query(sql)
+		//fmt.Println(sql)
+		fid := 0
+		j := 0
+		for frows.Next() {
+			err := frows.Scan(&fid)
+			if err != nil {
+				fmt.Println("查询出错！")
+				return
+			}
+			j++
+			sql = fmt.Sprintf("delete from time_price where face_id=%d;", fid)
+			this.conn.Exec(sql)
+			fmt.Printf("正在删除：%d/%d/%d\n", j, i+1, dcount)
+		}
+
+		fmt.Printf("正在删除：%d/%d\n", i, dcount)
+	}
 }
 
 func (this *MysqlSuport) getFaceFromRows(rows *sql.Rows) ([]*common.CodeFace, bool) {
