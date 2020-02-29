@@ -8,7 +8,10 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 )
+
+const GCode = 1912261
 
 func StrToCodeNum(str string) int {
 	str = strings.Replace(str, ".SH", "", -1)
@@ -66,6 +69,31 @@ func GetFilePath(date string, no int) string {
 	return path
 }
 
+func Max(a int, b int) int {
+	if a > b {
+		return a
+	} else {
+		return b
+	}
+}
+
+func Min(a int, b int) int {
+	if a < b {
+		return a
+	} else {
+		return b
+	}
+}
+
+func CheckDateStr(date string) bool {
+	_, err := time.Parse("2016-01-02", date)
+	return err != nil
+}
+
+func CheckFile(file string) bool {
+	_, err := os.Stat(file)
+	return err == nil
+}
 
 func GetSecondsFromStr(timestr string) (int, bool) {
 	strs := strings.Split(timestr, ":")

@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	CONSTR string = "mysql:123456@/test?charset=utf8"
+	CONSTR string = "mysql:123456@/gotest?charset=utf8"
 )
 
 type MysqlSuport struct {
@@ -227,6 +227,30 @@ func (this *MysqlSuport) SaveCodeFaces(faces []*common.CodeFace) bool {
 
 }
 
+func (this *MysqlSuport) GetSavedDates(date string) map[string]bool {
+	dates := map[string]bool{}
+
+	sql := "select _date from codeface where no_id=0"
+	if common.CheckDateStr(date) {
+		sql = fmt.Sprintf("%s and _date>'%s'")
+	}
+	sql += ";"
+	rows, err := this.conn.Query(sql)
+	if err != nil {
+		fmt.Println("GetSavedDates 失败")
+		fmt.Println(err)
+		return dates
+	}
+
+	for rows.Next() {
+		var str string
+		rows.Scan(&str)
+		dates[str] = true
+	}
+
+	return dates
+}
+
 /*
 获取faces
 */
@@ -257,7 +281,7 @@ func (this *MysqlSuport) GetCodeFaces(date string, no int) ([]*common.CodeFace, 
 		fmt.Println(err)
 		return faces, false
 	}
-
+	fmt.Println(sqlStr + filter + ";")
 	return this.getFaceFromRows(rows)
 }
 
@@ -265,8 +289,11 @@ func (this *MysqlSuport) SplitDB() {
 	fs, _ := this.GetCodeFaces("", 1912261)
 	dcount := len(fs)
 	for i, fc := range fs {
-		y, _ := strconv.Atoi(strings.Split(fc.Date, "-")[0])
-		if y > 2018 {
+		// y, _ := strconv.Atoi(strings.Split(fc.Date, "-")[0])
+		// if y > 2018 {
+		// 	continue
+		// }
+		if i < 342 {
 			continue
 		}
 		sql := fmt.Sprintf("select id from codeface where _date='%s' and no_id>0;", fc.Date)
@@ -362,14 +389,100 @@ func (this *MysqlSuport) getFaceFromRows(rows *sql.Rows) ([]*common.CodeFace, bo
 /*
 保存 TimePrices
 */
-func (this *MysqlSuport) SaveTimePrices(prices []*common.CodePrice) bool {
+func (this *MysqlSuport) SaveTimePrices(face *common.CodeFace, prices []*common.CodePrice) bool {
+	tableName := this.GetPriceTableName(face.Date)
+	sqlStr := fmt.Sprintf("replace into %s(face_id,time,price,trade_type,volume) VALUES", tableName)
+	i, count := 0, 300
+	timeset, _ := common.GetSecondsFromStr("09:00:00")
+	allCount := len(prices)
+	for {
+		index := i + count
+		if index > allCount {
+			index = allCount
+		}
+
+		list := prices[i:index]
+		valueStr := ""
+		for _, cp := range list {
+			if len(valueStr) > 0 {
+				valueStr += ","
+				valueStr = fmt.Sprintf("%s(%d,%d,%d,%d,%d)", valueStr,
+					cp.FaceId,
+					cp.Time-timeset,
+					cp.Price-int(face.StartPrice*100),
+					cp.TradeType,
+					common.Min(cp.Volume, 16777215))
+			}
+		}
+
+		_, err := this.conn.Exec(sqlStr + valueStr + ";")
+		if err != nil {
+			fmt.Println("SaveTimePrices 失败")
+			fmt.Println(err)
+			return false
+		}
+
+		if index == allCount {
+			break
+		}
+
+		i = index
+	}
 	return true
 }
 
 /*
 获取 TimePrice
 */
-func (this *MysqlSuport) GetTimePrice(date string, no int) ([]*common.CodePrice, bool) {
+func (this *MysqlSuport) GetTimePrice(face *common.CodeFace) ([]*common.CodePrice, bool) {
+	tableName := this.GetPriceTableName(face.Date)
 	prices := []*common.CodePrice{}
+
+	sqlStr := fmt.Sprintf("select face_id,time,price,trade_type,a.volume as volume from %s as a join codeface as b on a.face_id=b.id join tbl_codes as c on b.no_id = c.id where c._no=%d",
+		tableName, face.Code)
+
+	rows, err := this.conn.Query(sqlStr)
+
+	if err != nil {
+		fmt.Println("GetTimePrice 失败")
+		fmt.Println(err)
+		fmt.Println(sqlStr)
+		return prices, false
+	}
+	timeset, _ := common.GetSecondsFromStr("09:00:00")
+	for rows.Next() {
+		cp := common.CodePrice{}
+		rows.Scan(&cp.FaceId, &cp.Time, &cp.Price, &cp.TradeType, &cp.Volume)
+		cp.Price = cp.Price + int(face.StartPrice*100)
+		cp.Time += timeset
+		prices = append(prices, &cp)
+	}
+
 	return prices, true
+}
+
+func (this *MysqlSuport) SetFaceState(date string,code int,state) bool{
+    if !common.CheckDateStr(date)&&code<=0{
+		return false
+	}
+
+	baseSql:=fmt.Sprintf("update codeface set state=%d",state)
+	filter:=""
+	if common.CheckDateStr(date){
+		filter=fmt.Sprintf(" where _date='%s'",date)
+	}
+	if id=this.GetIdbyNo(code);id>0{
+		if len(filter)>0{
+			filter+=" and"
+		}
+
+		filter=fmt.Sprintf("%s no_id=%d",id)
+	}
+
+	if len(filter)==0{
+		return false
+	}
+
+	_,err:= this.conn.Exec(baseSql+filter+";")
+	return err==nil
 }

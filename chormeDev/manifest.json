@@ -30,6 +30,19 @@
 	"omnibox": { "keyword" : "go" },
 	// 默认语言
 	"default_locale": "zh_CN",
+
 	// devtools页面入口，注意只能指向一个HTML文件，不能是JS文件
-	"devtools_page": "devtools.html"
+	"devtools_page": "devtools.html",
+	"content_scripts": [
+		{
+		  "matches": [
+			"https://www.hahamx.cn/*"
+		  ],
+		  "js": [
+			"js/contentScript.js"
+		  ],
+		  "run_at": "document_start"
+		}
+	  ]
+
 }

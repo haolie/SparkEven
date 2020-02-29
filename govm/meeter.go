@@ -14,7 +14,8 @@ import (
 )
 
 var (
-	downProgressCount int = 3
+	downProgressCount int            = 3
+	ds                db.MysqlSuport = db.MysqlSuport{}
 )
 
 func main() {
@@ -33,22 +34,43 @@ func main() {
 	// 	fs = append(fs, &f.CodeFace)
 	// }
 
-	ds := db.MysqlSuport{}
+	nohelper.GetCodeFaces("2020-01-06")
 	ds.Init()
 	//ds.SaveCodeFaces(fs)
-	fs, _ := ds.GetCodeFaces("", 1912261)
+	fs, _ := ds.GetCodeFaces("2020-01-06", 1300782)
 	for _, f := range fs {
 		f.Println()
+		cps, _ := ds.GetTimePrice(f)
+		for _, cp := range cps {
+			cp.Print()
+		}
 	}
 	GetTimePriceFromFile("E:/VM/common/go/src/SparkEven/govm/datefiles/2020-01-20/2020-01-20_1000006.xls")
 	select {}
 }
 
+func StartDataSave(date string) bool {
+	fxs := nohelper.GetCodeFaces(date)
+
+	for k, f := range fxs {
+		if common.CheckFile(common.GetFilePath(f.Date, f.Code)) {
+			delete(fxs, k)
+		}
+	}
+
+	if len(fxs) == 0 {
+		ds.SetFaceState(date, common.GCode)
+		return true
+	}
+
+}
+
 func DownDateFiles(date string, faces map[int]*common.FaceEx) {
-	var exitChls = make(chan bool, 4)
+	pcount := common.Min(len(faces), downProgressCount)
+	var exitChls = make(chan bool, pcount)
 	//var inputchls = make([]chan *common.FaceEx, downProgressCount)
 	inputchls := make(chan *common.FaceEx)
-	for i := 0; i < downProgressCount; i++ {
+	for i := 0; i < pcount; i++ {
 		go func(exitchl chan bool, index int) {
 			for c := range inputchls {
 				DownFile(c.Date, c.Code)
@@ -62,7 +84,7 @@ func DownDateFiles(date string, faces map[int]*common.FaceEx) {
 		inputchls <- face
 	}
 	close(inputchls)
-	for i := 0; i < downProgressCount; i++ {
+	for i := 0; i < pcount; i++ {
 		<-exitChls
 	}
 	close(exitChls)

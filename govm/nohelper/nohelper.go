@@ -1,8 +1,6 @@
 package nohelper
 
 import (
-	"../common"
-	"../common/csv"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -12,6 +10,10 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"../common"
+	"../common/csv"
+	"../db"
 
 	//"reflect"
 	//"strconv"
@@ -191,6 +193,26 @@ func getNoFun(token string, index int, perCount int, colConfigs map[string]*Col)
 	}
 
 	return list, true
+}
+
+func GetCodeFaces(date string) map[int]*common.FaceEx {
+	faces, success := db.GetCodeFaces(date, -1)
+	if success {
+		list := map[int]*common.FaceEx{}
+		for _, face := range faces {
+			temp = common.FaceEx{CodeFace: *face}
+			list[face.Code] = &temp
+		}
+		return list
+	}
+
+	fxs:= GetNocodesFromWeb(date)
+	faces=[]*common.CodeFace
+	for _,f:=range fxs{
+		faces=append(faces,&f.CodeFace)
+	}
+	db.SaveCodeFaces(faces)
+	return fxs
 }
 
 func GetNocodesFromWeb(date string) map[int]*common.FaceEx {
