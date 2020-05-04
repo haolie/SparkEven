@@ -36,7 +36,7 @@
 	"content_scripts": [
 		{
 		  "matches": [
-			"https://www.hahamx.cn/*"
+			"https://openlayers.org/*","https://www.hahamx.cn/*"
 		  ],
 		  "js": [
 			"js/contentScript.js"

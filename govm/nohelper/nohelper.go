@@ -173,9 +173,10 @@ func getNoFun(token string, index int, perCount int, colConfigs map[string]*Col)
 		if len(codestr) == 0 {
 			break
 		}
-		if r1.Get(i, colConfigs["volume"].index).ToString() == "--" {
+		if r1.Get(i, colConfigs["ud"].index).ToString() == "--" {
 			continue
 		}
+		start := time.Now()
 		temp := common.FaceEx{}
 		temp.Code = common.StrToCodeNum(codestr)
 		temp.Change = r1.Get(i, colConfigs["ud"].index).ToFloat32()
@@ -190,28 +191,29 @@ func getNoFun(token string, index int, perCount int, colConfigs map[string]*Col)
 		temp.Percent = float32(math.Ceil(float64(temp.Change*10000/temp.YestPrice)) / 100)
 
 		list = append(list, &temp)
+		fmt.Println("\nspend : ", time.Now().Sub(start))
 	}
 
 	return list, true
 }
 
 func GetCodeFaces(date string) map[int]*common.FaceEx {
-	faces, success := db.GetCodeFaces(date, -1)
-	if success {
+	faces, success := db.Create().GetCodeFaces(date, -1)
+	if success && len(faces) > 0 {
 		list := map[int]*common.FaceEx{}
 		for _, face := range faces {
-			temp = common.FaceEx{CodeFace: *face}
+			temp := common.FaceEx{CodeFace: *face}
 			list[face.Code] = &temp
 		}
 		return list
 	}
 
-	fxs:= GetNocodesFromWeb(date)
-	faces=[]*common.CodeFace
-	for _,f:=range fxs{
-		faces=append(faces,&f.CodeFace)
+	fxs := GetNocodesFromWeb(date)
+	faces = []*common.CodeFace{}
+	for _, f := range fxs {
+		faces = append(faces, &f.CodeFace)
 	}
-	db.SaveCodeFaces(faces)
+	db.Create().SaveCodeFaces(faces)
 	return fxs
 }
 
@@ -236,7 +238,7 @@ func GetNocodesFromWeb(date string) map[int]*common.FaceEx {
 		}
 	}
 	allFace := make(map[int]*common.FaceEx)
-	pageCount = 1
+	// pageCount = 1
 	for i := 0; i < pageCount; i++ {
 		list, ok := getNoFun(tobj.token, i+1, perCount, clMaps)
 		if ok {
@@ -259,7 +261,7 @@ func GetNocodesFromWeb(date string) map[int]*common.FaceEx {
 	// 	fmt.Println(i)
 	// 	c.Println()
 	// }
-
+	newSession = ""
 	return allFace
 }
 
@@ -283,13 +285,22 @@ func GetDatesFromWeb(start string) []string {
 
 	body, err := ioutil.ReadAll(resp.Body)
 	rows, _ := csv.GetRowsFromBytes(body)
-	for i, row := range rows {
+
+	for i := len(rows) - 1; i >= 0; i-- {
+		row := rows[i]
 		if i == 0 {
 			continue
 		}
 
 		list = append(list, strings.Split(row[0], ",")[0])
 	}
+	// for i, row := range rows {
+	// 	if i == 0 {
+	// 		continue
+	// 	}
+
+	// 	list = append(list, strings.Split(row[0], ",")[0])
+	// }
 	return list
 }
 

@@ -34,6 +34,8 @@ func CodeNumToStr(num int) string {
 }
 
 func HttpDown(url string, savePath string) bool {
+	dir := filepath.Dir(savePath)
+	os.MkdirAll(dir, os.ModePerm)
 	res, err := http.Get(url)
 	if err != nil {
 		return false

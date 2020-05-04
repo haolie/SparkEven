@@ -11,7 +11,8 @@ import (
 )
 
 const (
-	CONSTR string = "mysql:123456@/gotest?charset=utf8"
+	CONSTR       string = "mysql@/test?charset=utf8"
+	Mysql_smUInt int    = 65535
 )
 
 type MysqlSuport struct {
@@ -21,6 +22,17 @@ type MysqlSuport struct {
 	tableNames map[string]int
 	maxNoId    int
 	maxFaceId  int
+}
+
+var instense *MysqlSuport
+
+func Create() *MysqlSuport {
+	if instense == nil {
+		instense = &MysqlSuport{}
+		instense.Init()
+	}
+
+	return instense
 }
 
 func (this *MysqlSuport) Init() bool {
@@ -168,7 +180,7 @@ func (this *MysqlSuport) addPriceTable(name string) bool {
 */
 func (this *MysqlSuport) SaveCodeFaces(faces []*common.CodeFace) bool {
 
-	i, count := 0, 300
+	i, count := 0, 5
 	for {
 		index := i + count
 		if index > len(faces) {
@@ -176,13 +188,17 @@ func (this *MysqlSuport) SaveCodeFaces(faces []*common.CodeFace) bool {
 		}
 
 		array := faces[i:index]
-		var str = "INSERT delayed INTO codeface(id,_date,no_id,_min,_max,_change,lastprice,startprice,volume,turnoverRate,turnover,face,dde,dde_b,dde_s,state,per) VALUES"
+		var str = "INSERT delayed INTO codeface(id,_date,no_id,_min,_max,_change,lastprice,startprice,volume,turnoverRate,turnorver,face,dde,dde_b,dde_s,state,per) VALUES"
 		var vStr = ""
 		for _, face := range array {
 			if face.Volume > 16777215 {
 				face.Volume = 16777215
 			}
 			this.maxFaceId++
+			turnoverRate := int(face.TurnoverRate * 100)
+			if turnoverRate > Mysql_smUInt {
+				turnoverRate = Mysql_smUInt
+			}
 			fmt.Printf("noId:%d\n", this.GetIdbyNo(face.Code))
 			tempStr := fmt.Sprintf("(%d,'%s',%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d)",
 				this.maxFaceId,
@@ -194,7 +210,7 @@ func (this *MysqlSuport) SaveCodeFaces(faces []*common.CodeFace) bool {
 				int(face.LastPrice*100),
 				int(face.StartPrice*100),
 				face.Volume,
-				int(face.TurnoverRate*100),
+				turnoverRate,
 				int(face.Turnover*100),
 				face.Face,
 				0,
@@ -461,28 +477,28 @@ func (this *MysqlSuport) GetTimePrice(face *common.CodeFace) ([]*common.CodePric
 	return prices, true
 }
 
-func (this *MysqlSuport) SetFaceState(date string,code int,state) bool{
-    if !common.CheckDateStr(date)&&code<=0{
+func (this *MysqlSuport) SetFaceState(date string, code int, state int) bool {
+	if !common.CheckDateStr(date) && code <= 0 {
 		return false
 	}
 
-	baseSql:=fmt.Sprintf("update codeface set state=%d",state)
-	filter:=""
-	if common.CheckDateStr(date){
-		filter=fmt.Sprintf(" where _date='%s'",date)
+	baseSql := fmt.Sprintf("update codeface set state=%d", state)
+	filter := ""
+	if common.CheckDateStr(date) {
+		filter = fmt.Sprintf(" where _date='%s'", date)
 	}
-	if id=this.GetIdbyNo(code);id>0{
-		if len(filter)>0{
-			filter+=" and"
+	if id := this.GetIdbyNo(code); id > 0 {
+		if len(filter) > 0 {
+			filter += " and"
 		}
 
-		filter=fmt.Sprintf("%s no_id=%d",id)
+		filter = fmt.Sprintf("%s no_id=%d", id)
 	}
 
-	if len(filter)==0{
+	if len(filter) == 0 {
 		return false
 	}
 
-	_,err:= this.conn.Exec(baseSql+filter+";")
-	return err==nil
+	_, err := this.conn.Exec(baseSql + filter + ";")
+	return err == nil
 }

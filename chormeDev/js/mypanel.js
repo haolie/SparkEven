@@ -39,10 +39,10 @@ function windowReload() {
 	chrome.devtools.inspectedWindow.eval('window.location.reload()')
 	setTimeout(function () {
 		windowReload()
-	}, 60000)
+	}, 60000*3)
 }
 
-//windowReload()
+windowReload()
 
 
 chrome.devtools.network.onRequestFinished.addListener(

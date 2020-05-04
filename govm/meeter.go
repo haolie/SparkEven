@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	downProgressCount int            = 3
-	ds                db.MysqlSuport = db.MysqlSuport{}
+	downProgressCount int             = 2
+	ds                *db.MysqlSuport = db.Create()
 )
 
 func main() {
@@ -34,38 +34,59 @@ func main() {
 	// 	fs = append(fs, &f.CodeFace)
 	// }
 
-	nohelper.GetCodeFaces("2020-01-06")
-	ds.Init()
+	//nohelper.GetCodeFaces("2020-01-06")
+	StartDataSave()
 	//ds.SaveCodeFaces(fs)
-	fs, _ := ds.GetCodeFaces("2020-01-06", 1300782)
-	for _, f := range fs {
-		f.Println()
-		cps, _ := ds.GetTimePrice(f)
-		for _, cp := range cps {
-			cp.Print()
-		}
-	}
-	GetTimePriceFromFile("E:/VM/common/go/src/SparkEven/govm/datefiles/2020-01-20/2020-01-20_1000006.xls")
+	// fs, _ := ds.GetCodeFaces("2020-01-06", 1300782)
+	// for _, f := range fs {
+	// 	f.Println()
+	// 	cps, _ := ds.GetTimePrice(f)
+	// 	for _, cp := range cps {
+	// 		cp.Print()
+	// 	}
+	// }
+	// GetTimePriceFromFile("E:/VM/common/go/src/SparkEven/govm/datefiles/2020-01-20/2020-01-20_1000006.xls")
 	select {}
 }
 
-func StartDataSave(date string) bool {
-	fxs := nohelper.GetCodeFaces(date)
-
-	for k, f := range fxs {
-		if common.CheckFile(common.GetFilePath(f.Date, f.Code)) {
-			delete(fxs, k)
-		}
+func StartDataSave() bool {
+	dates := nohelper.GetDatesFromWeb("2020-02-12")
+	for _, date := range dates {
+		fmt.Println("…………………………")
+		fmt.Println("…………………………")
+		fmt.Println("…………………………")
+		fmt.Printf("start down：%s\n", date)
+		fmt.Println("…………………………")
+		DownDateFiles(date)
+		fmt.Println("…………………………")
+		fmt.Println("…………………………")
+		fmt.Println("…………………………")
+		fmt.Printf("finish down：%s\n", date)
+		fmt.Println("…………………………")
 	}
+	return true
+}
 
-	if len(fxs) == 0 {
-		ds.SetFaceState(date, common.GCode)
-		return true
-	}
+func SaveDataToDb() {
 
 }
 
-func DownDateFiles(date string, faces map[int]*common.FaceEx) {
+func DownDateFiles(date string) {
+	faces := nohelper.GetCodeFaces(date)
+	fmt.Println(len(faces))
+	for k, f := range faces {
+		if common.CheckFile(common.GetFilePath(f.Date, f.Code)) {
+			delete(faces, k)
+		}
+	}
+
+	count := len(faces)
+	if count == 0 {
+		// ds.SetFaceState(date, common.GCode)
+		return
+	}
+
+	var started int = 0
 	pcount := common.Min(len(faces), downProgressCount)
 	var exitChls = make(chan bool, pcount)
 	//var inputchls = make([]chan *common.FaceEx, downProgressCount)
@@ -82,6 +103,8 @@ func DownDateFiles(date string, faces map[int]*common.FaceEx) {
 
 	for _, face := range faces {
 		inputchls <- face
+		started++
+		fmt.Printf("%s started %d/%d\n", date, started, count)
 	}
 	close(inputchls)
 	for i := 0; i < pcount; i++ {
