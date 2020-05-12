@@ -42,10 +42,16 @@ func HttpDown(url string, savePath string) bool {
 	}
 
 	f, err := os.Create(savePath)
+	defer f.Close()
 	if err != nil {
 		panic(err)
 	}
 	io.Copy(f, res.Body)
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	// fmt.Println("文件长度：", length)
 
 	return true
 }

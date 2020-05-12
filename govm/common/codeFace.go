@@ -19,6 +19,7 @@ package common
 // per smallint,
 
 type CodeFace struct {
+	ID           int
 	Code         int
 	Date         string
 	MaxValue     float32

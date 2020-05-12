@@ -30,7 +30,10 @@ func StartListenSession() {
 	mux.HandleFunc("/", func(res http.ResponseWriter, r *http.Request) {
 		lock.Lock()
 		defer lock.Unlock()
-		newSession = strings.TrimLeft(r.URL.Path, "/")
+		if len(newSession) == 0 {
+			newSession = strings.TrimLeft(r.URL.Path, "/")
+		}
+
 		//fmt.Println(newSession)
 		fmt.Fprintf(res, "%v\n", time.Now().Format("2006-01-02 15:04:05"))
 	})
@@ -47,7 +50,7 @@ type tokenObj struct {
 }
 
 func GetToken(date string) (tokenObj, bool) {
-
+	newSession = ""
 	for {
 		if len(newSession) > 0 {
 			break
@@ -274,6 +277,7 @@ func GetDatesFromWeb(start string) []string {
 		"&end=" +
 		strings.Replace(end, "-", "", 2) +
 		"&fields=TCLOSE;HIGH;LOW;TOPEN;LCLOSE;CHG;PCHG;VOTURNOVER;VATURNOVER"
+	fmt.Println(uri)
 	request, err := http.NewRequest("GET", uri, nil)
 	request.Header.Add("Connection", "keep-alive")
 	request.Header.Add("User-Agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.75 Safari/537.36")

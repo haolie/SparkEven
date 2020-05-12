@@ -14,3 +14,4 @@ yarn-error.log*
 *.njsproj
 *.sln
 .idea/SparkEven.iml
+/govm/datefiles

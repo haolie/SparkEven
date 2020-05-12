@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	CONSTR       string = "mysql@/test?charset=utf8"
+	CONSTR       string = "mysql:123456@/test?charset=utf8"
 	Mysql_smUInt int    = 65535
 )
 
@@ -180,7 +180,7 @@ func (this *MysqlSuport) addPriceTable(name string) bool {
 */
 func (this *MysqlSuport) SaveCodeFaces(faces []*common.CodeFace) bool {
 
-	i, count := 0, 5
+	i, count := 0, 300
 	for {
 		index := i + count
 		if index > len(faces) {
@@ -188,13 +188,14 @@ func (this *MysqlSuport) SaveCodeFaces(faces []*common.CodeFace) bool {
 		}
 
 		array := faces[i:index]
-		var str = "INSERT delayed INTO codeface(id,_date,no_id,_min,_max,_change,lastprice,startprice,volume,turnoverRate,turnorver,face,dde,dde_b,dde_s,state,per) VALUES"
+		var str = "INSERT delayed INTO codeface(id,_date,no_id,_min,_max,_change,lastprice,startprice,volume,turnoverRate,turnover,face,dde,dde_b,dde_s,state,per) VALUES"
 		var vStr = ""
 		for _, face := range array {
 			if face.Volume > 16777215 {
 				face.Volume = 16777215
 			}
 			this.maxFaceId++
+			face.ID = this.maxFaceId
 			turnoverRate := int(face.TurnoverRate * 100)
 			if turnoverRate > Mysql_smUInt {
 				turnoverRate = Mysql_smUInt
@@ -248,7 +249,7 @@ func (this *MysqlSuport) GetSavedDates(date string) map[string]bool {
 
 	sql := "select _date from codeface where no_id=0"
 	if common.CheckDateStr(date) {
-		sql = fmt.Sprintf("%s and _date>'%s'")
+		sql = fmt.Sprintf("%s and _date>'%s'", sql, date)
 	}
 	sql += ";"
 	rows, err := this.conn.Query(sql)
@@ -277,7 +278,7 @@ func (this *MysqlSuport) GetCodeFaces(date string, no int) ([]*common.CodeFace, 
 		return faces, false
 	}
 
-	sqlStr := "select _date,no_id,_min,_max,_change,lastprice,startprice,dde_b,dde_s,face,volume,turnoverRate,turnover,state,per from codeface where"
+	sqlStr := "select id,_date,no_id,_min,_max,_change,lastprice,startprice,dde_b,dde_s,face,volume,turnoverRate,turnover,state,per from codeface where"
 	filter := ""
 	if len(date) > 0 {
 		filter = fmt.Sprintf(" _date='%s'", date)
@@ -366,7 +367,9 @@ func (this *MysqlSuport) getFaceFromRows(rows *sql.Rows) ([]*common.CodeFace, bo
 	var noId, minValue, maxValue, change, startPrice, lastPrice, turnover, turnoverRate, percent int
 	for rows.Next() {
 		face := &(common.CodeFace{})
-		err := rows.Scan(&face.Date,
+		err := rows.Scan(
+			&face.ID,
+			&face.Date,
 			&noId,
 			&minValue,
 			&maxValue,
@@ -408,7 +411,7 @@ func (this *MysqlSuport) getFaceFromRows(rows *sql.Rows) ([]*common.CodeFace, bo
 func (this *MysqlSuport) SaveTimePrices(face *common.CodeFace, prices []*common.CodePrice) bool {
 	tableName := this.GetPriceTableName(face.Date)
 	sqlStr := fmt.Sprintf("replace into %s(face_id,time,price,trade_type,volume) VALUES", tableName)
-	i, count := 0, 300
+	i, count := 0, 2000
 	timeset, _ := common.GetSecondsFromStr("09:00:00")
 	allCount := len(prices)
 	for {
@@ -422,13 +425,15 @@ func (this *MysqlSuport) SaveTimePrices(face *common.CodeFace, prices []*common.
 		for _, cp := range list {
 			if len(valueStr) > 0 {
 				valueStr += ","
-				valueStr = fmt.Sprintf("%s(%d,%d,%d,%d,%d)", valueStr,
-					cp.FaceId,
-					cp.Time-timeset,
-					cp.Price-int(face.StartPrice*100),
-					cp.TradeType,
-					common.Min(cp.Volume, 16777215))
 			}
+
+			valueStr = fmt.Sprintf("%s(%d,%d,%d,%d,%d)", valueStr,
+				face.ID,
+				cp.Time-timeset,
+				cp.Price-int(face.StartPrice*100),
+				cp.TradeType,
+				common.Min(cp.Volume, 16777215))
+
 		}
 
 		_, err := this.conn.Exec(sqlStr + valueStr + ";")
@@ -492,7 +497,7 @@ func (this *MysqlSuport) SetFaceState(date string, code int, state int) bool {
 			filter += " and"
 		}
 
-		filter = fmt.Sprintf("%s no_id=%d", id)
+		filter = fmt.Sprintf("%s no_id=%d", filter, id)
 	}
 
 	if len(filter) == 0 {
