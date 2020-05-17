@@ -1,7 +1,6 @@
 package common
 
 import (
-	"fmt"
 	"sync"
 	"time"
 )
@@ -9,6 +8,7 @@ import (
 type WorkStationer interface {
 	Init()
 	AddItem(item WorkItem)
+	EndInput()
 	Start()
 	WaitEnd()
 	Finished()
@@ -25,7 +25,7 @@ type WorkStation struct {
 	wg             sync.WaitGroup
 	workers        []Worker
 	status         int // -1  已销毁  0 未初始化 1 已初始化  2 工作中 3 等待销毁
-	startTime      *time.Time
+	StartTime      *time.Time
 }
 
 //初始化
@@ -44,16 +44,21 @@ func (this *WorkStation) Init() {
 	this.status = 1
 }
 
-//添加工作
-func (this *WorkStation) AddItem(item WorkItem) {
-	this.chlWorkItem <- item
-	this.totalItemCount++
-	if this.totalItemCount == this.maxItemCount {
+func (this *WorkStation) EndInput() {
+	if this.status == 1 || this.status == 2 {
 		close(this.chlWorkItem)
 	}
-	if this.startTime == nil {
+}
+
+//添加工作
+func (this *WorkStation) AddItem(item WorkItem) {
+
+	this.chlWorkItem <- item
+	this.totalItemCount++
+
+	if this.StartTime == nil {
 		t := time.Now()
-		this.startTime = &t
+		this.StartTime = &t
 	}
 }
 
@@ -73,11 +78,11 @@ func (this *WorkStation) Start() {
 	}
 
 	for i := 0; i < this.progressCount; i++ {
-		<-this.exitChl
+		_ = <-this.exitChl
 		this.wg.Done()
 	}
 	close(this.exitChl)
-	fmt.Println("workend:", time.Since(*this.startTime))
+
 	this.Finished()
 }
 

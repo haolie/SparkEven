@@ -14,6 +14,7 @@ func GetRowsFromFile(file string) ([][]string, bool) {
 	if err != nil {
 		return [][]string{}, false
 	}
+	defer f.Close()
 
 	utfReader := transform.NewReader(f, simplifiedchinese.GB18030.NewDecoder())
 	all, err := ioutil.ReadAll(utfReader)

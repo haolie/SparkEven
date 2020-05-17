@@ -72,6 +72,7 @@ primary key (id)
 alter table codeface add volume BIGINT UNSIGNED;
 alter table codeface add turnoverRate SMALLINT UNSIGNED;
 alter table codeface add turnover BIGINT UNSIGNED;
+alter table codeface add INDEX no_id(no_id);
 
 CREATE TABLE micInfo(
   no_id SMALLINT UNSIGNED NOT NULL,

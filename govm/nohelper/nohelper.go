@@ -76,10 +76,10 @@ func GetToken(date string) (tokenObj, bool) {
 	request.Header.Add("User-Agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.75 Safari/537.36")
 	request.Header.Add("Cookie", newSession)
 	resp, err := client.Do(request)
-	defer resp.Body.Close()
 	if err != nil {
 		return result, false
 	}
+	defer resp.Body.Close()
 	resultStr, err := ioutil.ReadAll(resp.Body)
 
 	if err != nil {
@@ -200,29 +200,38 @@ func getNoFun(token string, index int, perCount int, colConfigs map[string]*Col)
 	return list, true
 }
 
-func GetCodeFaces(date string) map[int]*common.FaceEx {
+func GetCodeFaces(date string) (map[int]*common.FaceEx, bool) {
 	faces, success := db.Create().GetCodeFaces(date, -1)
 	if success && len(faces) > 0 {
 		list := map[int]*common.FaceEx{}
 		for _, face := range faces {
-			temp := common.FaceEx{CodeFace: *face}
+			if face.Code == 1912261 {
+				continue
+			}
+			temp := common.FaceEx{CodeFace: *face, FileState: face.State}
 			list[face.Code] = &temp
 		}
-		return list
+		return list, true
 	}
 
-	fxs := GetNocodesFromWeb(date)
+	fxs, ok := GetNocodesFromWeb(date)
+	if !ok {
+		return nil, ok
+	}
 	faces = []*common.CodeFace{}
 	for _, f := range fxs {
 		faces = append(faces, &f.CodeFace)
 	}
 	db.Create().SaveCodeFaces(faces)
-	return fxs
+	return fxs, true
 }
 
-func GetNocodesFromWeb(date string) map[int]*common.FaceEx {
+func GetNocodesFromWeb(date string) (map[int]*common.FaceEx, bool) {
 	//tokenObj, _ := GetToken(date)
-	tobj, _ := GetToken(date)
+	tobj, ok := GetToken(date)
+	if !ok {
+		return nil, ok
+	}
 	//fmt.Println(tobj)
 	perCount := 1000
 	pageCount := tobj.count / perCount
@@ -249,6 +258,8 @@ func GetNocodesFromWeb(date string) map[int]*common.FaceEx {
 				face.Date = date
 				allFace[face.Code] = face
 			}
+		} else {
+			return nil, ok
 		}
 
 	}
@@ -265,7 +276,7 @@ func GetNocodesFromWeb(date string) map[int]*common.FaceEx {
 	// 	c.Println()
 	// }
 	newSession = ""
-	return allFace
+	return allFace, true
 }
 
 func GetDatesFromWeb(start string) []string {
@@ -282,10 +293,11 @@ func GetDatesFromWeb(start string) []string {
 	request.Header.Add("Connection", "keep-alive")
 	request.Header.Add("User-Agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.75 Safari/537.36")
 	resp, err := client.Do(request)
-	defer resp.Body.Close()
 	if err != nil {
 		return list
 	}
+
+	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	rows, _ := csv.GetRowsFromBytes(body)
@@ -315,10 +327,11 @@ func GetLastDateStr() string {
 	request.Header.Add("Connection", "keep-alive")
 	request.Header.Add("User-Agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.75 Safari/537.36")
 	resp, err := client.Do(request)
-	defer resp.Body.Close()
+
 	if err != nil {
 		return ""
 	}
+	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	str := string(body)

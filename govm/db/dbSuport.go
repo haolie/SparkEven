@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	CONSTR       string = "mysql:123456@/test?charset=utf8"
+	CONSTR       string = "mysql:123456@/vmpark?charset=utf8"
 	Mysql_smUInt int    = 65535
 )
 
@@ -33,6 +33,20 @@ func Create() *MysqlSuport {
 	}
 
 	return instense
+}
+
+func CloseDefault() {
+	if instense != nil {
+		instense.Close()
+		instense = nil
+	}
+}
+
+func (this *MysqlSuport) Close() {
+	if this.State == 1 {
+		this.conn.Close()
+		this.State = 0
+	}
 }
 
 func (this *MysqlSuport) Init() bool {
@@ -176,6 +190,34 @@ func (this *MysqlSuport) addPriceTable(name string) bool {
 }
 
 /*
+更新交易日状态
+*/
+func (this *MysqlSuport) UpdateFaceState(date string, code int, state int) {
+	faces, ok := this.GetCodeFaces(date, code)
+	if !ok {
+		return
+	}
+	if len(faces) > 0 {
+		updateStr := fmt.Sprintf("update codeface set state=%d where id=%d;", state, faces[0].ID)
+		_, err := this.conn.Exec(updateStr)
+		if err != nil {
+			fmt.Println("更新交易日期状态失败")
+			fmt.Println(err)
+		}
+	} else {
+		face := new(common.CodeFace)
+		face.Code = code
+		face.Date = date
+		face.State = state
+		ok = this.SaveCodeFaces([]*common.CodeFace{face})
+		if !ok {
+			fmt.Println("更新交易日期状态失败")
+		}
+	}
+
+}
+
+/*
 保存Faces
 */
 func (this *MysqlSuport) SaveCodeFaces(faces []*common.CodeFace) bool {
@@ -200,7 +242,7 @@ func (this *MysqlSuport) SaveCodeFaces(faces []*common.CodeFace) bool {
 			if turnoverRate > Mysql_smUInt {
 				turnoverRate = Mysql_smUInt
 			}
-			fmt.Printf("noId:%d\n", this.GetIdbyNo(face.Code))
+			// fmt.Printf("noId:%d\n", this.GetIdbyNo(face.Code))
 			tempStr := fmt.Sprintf("(%d,'%s',%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d)",
 				this.maxFaceId,
 				face.Date,
@@ -298,7 +340,7 @@ func (this *MysqlSuport) GetCodeFaces(date string, no int) ([]*common.CodeFace, 
 		fmt.Println(err)
 		return faces, false
 	}
-	fmt.Println(sqlStr + filter + ";")
+	// fmt.Println(sqlStr + filter + ";")
 	return this.getFaceFromRows(rows)
 }
 
@@ -414,6 +456,15 @@ func (this *MysqlSuport) SaveTimePrices(face *common.CodeFace, prices []*common.
 	i, count := 0, 2000
 	timeset, _ := common.GetSecondsFromStr("09:00:00")
 	allCount := len(prices)
+
+	//conn, err := db.Begin()
+	conn, err := this.conn.Begin()
+	if err != nil {
+		fmt.Println("数据库事务开启失败")
+		fmt.Println(err)
+		return false
+	}
+
 	for {
 		index := i + count
 		if index > allCount {
@@ -422,6 +473,9 @@ func (this *MysqlSuport) SaveTimePrices(face *common.CodeFace, prices []*common.
 
 		list := prices[i:index]
 		valueStr := ""
+		if len(list) == 0 {
+			panic("错误")
+		}
 		for _, cp := range list {
 			if len(valueStr) > 0 {
 				valueStr += ","
@@ -436,11 +490,13 @@ func (this *MysqlSuport) SaveTimePrices(face *common.CodeFace, prices []*common.
 
 		}
 
-		_, err := this.conn.Exec(sqlStr + valueStr + ";")
+		_, err := conn.Exec(sqlStr + valueStr + ";")
 		if err != nil {
+			fmt.Println(sqlStr + valueStr + ";")
 			fmt.Println("SaveTimePrices 失败")
 			fmt.Println(err)
-			return false
+			conn.Rollback()
+			panic("SaveTimePrices 失败")
 		}
 
 		if index == allCount {
@@ -449,6 +505,17 @@ func (this *MysqlSuport) SaveTimePrices(face *common.CodeFace, prices []*common.
 
 		i = index
 	}
+	sqlStr = fmt.Sprintf("update codeface set state=1 where id=%d;", face.ID)
+
+	_, errr := conn.Exec(sqlStr)
+	if errr != nil {
+		fmt.Println(sqlStr)
+		fmt.Println("SaveTimePrices 失败")
+		fmt.Println(errr)
+		conn.Rollback()
+		panic("SaveTimePrices 失败")
+	}
+	conn.Commit()
 	return true
 }
 

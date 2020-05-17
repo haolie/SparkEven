@@ -15,3 +15,4 @@ yarn-error.log*
 *.sln
 .idea/SparkEven.iml
 /govm/datefiles
+/govm/meeter.exe
