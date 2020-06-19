@@ -12,6 +12,7 @@ type Work struct {
 	chlItems chan WorkItem
 	exitChl  chan bool
 	status   int //0 空闲  1 工作中  3 已销毁
+	station  WorkStationer
 }
 
 func (this *Work) Working(chlItems chan WorkItem, exitChl chan bool) {
@@ -28,6 +29,7 @@ func (this *Work) Working(chlItems chan WorkItem, exitChl chan bool) {
 			break
 		}
 		item.Start()
+		this.station.AddFinished(1)
 	}
 
 	exitChl <- true
@@ -50,8 +52,9 @@ func (this *Work) Destory() {
 
 }
 
-func NewWork() *Work {
+func NewWork(station WorkStationer) *Work {
 	temp := &Work{}
+	temp.station = station
 	temp.status = 0
 	return temp
 }

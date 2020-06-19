@@ -2,6 +2,7 @@ package common
 
 import (
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -13,12 +14,15 @@ type WorkStationer interface {
 	WaitEnd()
 	Finished()
 	Destory()
+	SetKey(key int)
+	GetKey() int
+	AddFinished(count int32)
 }
 
 type WorkStation struct {
 	progressCount  int
-	totalItemCount int
-	finishedCount  int
+	TotalItemCount int
+	FinishedCount  int32
 	maxItemCount   int
 	chlWorkItem    chan WorkItem
 	exitChl        chan bool
@@ -26,6 +30,7 @@ type WorkStation struct {
 	workers        []Worker
 	status         int // -1  已销毁  0 未初始化 1 已初始化  2 工作中 3 等待销毁
 	StartTime      *time.Time
+	key            int
 }
 
 //初始化
@@ -36,12 +41,24 @@ func (this *WorkStation) Init() {
 
 	this.workers = make([]Worker, this.progressCount)
 	for i := 0; i < this.progressCount; i++ {
-		this.workers[i] = NewWork()
+		this.workers[i] = NewWork(this)
 	}
 
 	this.exitChl = make(chan bool, this.progressCount)
 	this.chlWorkItem = make(chan WorkItem, this.maxItemCount)
 	this.status = 1
+}
+
+func (this *WorkStation) AddFinished(count int32) {
+	atomic.AddInt32(&this.FinishedCount, count)
+}
+
+func (this *WorkStation) SetKey(key int) {
+	this.key = key
+}
+
+func (this *WorkStation) GetKey() int {
+	return this.key
 }
 
 func (this *WorkStation) EndInput() {
@@ -54,7 +71,7 @@ func (this *WorkStation) EndInput() {
 func (this *WorkStation) AddItem(item WorkItem) {
 
 	this.chlWorkItem <- item
-	this.totalItemCount++
+	this.TotalItemCount++
 
 	if this.StartTime == nil {
 		t := time.Now()

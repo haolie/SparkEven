@@ -85,6 +85,9 @@ func (this *DataSaver) StartDataGet(faces map[int]*common.FaceEx) {
 	}
 	fileStation.EndInput()
 	fileStation.WaitEnd()
+	fstion, _ := fileStation.(*common.WorkStation)
+	fmt.Println(date, "FinishedCount:", fstion.FinishedCount)
+	fmt.Println(date, "TotalItemCount:", fstion.TotalItemCount)
 	close(exitChl)
 	wg.Wait()
 	saveStation.EndInput()
@@ -123,6 +126,14 @@ type getPriceWork struct {
 }
 
 func (this *getPriceWork) Start() {
+
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println(r)
+			this.Finished()
+		}
+	}()
+
 	if this.face.FileState == 3 {
 		ok := false
 		filePath := common.GetFilePath(this.face.Date, this.face.Code)
@@ -195,10 +206,10 @@ func GetTimePriceFromFile(filePath string) ([]*common.CodePrice, bool) {
 	}
 	rows, success := csv.GetRowsFromFile(filePath)
 
-	errr := os.Remove(filePath)
-	if errr != nil {
-		fmt.Println(errr)
-	}
+	// errr := os.Remove(filePath)
+	// if errr != nil {
+	// 	fmt.Println(errr)
+	// }
 
 	if len(rows) == 0 {
 		fmt.Println("文件获取错误")

@@ -39,7 +39,9 @@ func (this *FileDowner) InputDateItem(item *map[int]*common.FaceEx) {
 
 func (this *downWork) Start() {
 	filePath := common.GetFilePath(this.face.Date, this.face.Code)
-	if common.CheckFile(filePath) {
+	if this.face.State == 1 {
+		this.face.FileState = 1
+	} else if common.CheckFile(filePath) {
 		this.face.FileState = 3
 	} else if this.face.FileState == 0 {
 		this.face.DownTimes++
@@ -55,6 +57,7 @@ func (this *downWork) Start() {
 		success := common.HttpDown(url, filePath)
 		if success {
 			this.face.FileState = 3
+			fmt.Println("文件下载成功")
 		} else {
 			this.face.FileState = 0
 			fmt.Println("文件下载失败")

