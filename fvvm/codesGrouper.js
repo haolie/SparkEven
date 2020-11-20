@@ -12,7 +12,7 @@ var grouper = function () {
 }
 
 var group = function () {
-  var date = "2018-10-19", path = "D:\\d\\", index = 0;
+  var date = "2018-11-20", path = "D:\\d\\", index = 0;
   fs.readFile(path + "old.txt", function (err, bytesRead) {
 
    // var oldcodes = bytesRead.toString().split("\r");
