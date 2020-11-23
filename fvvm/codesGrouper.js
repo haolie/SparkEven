@@ -33,7 +33,6 @@ var group = function () {
 
       list = tool.getSpiedList(list, 500);
 
-
       async.mapLimit(list, 1, function (group, callback) {
         var str = "";
         group.forEach(function (g) {
