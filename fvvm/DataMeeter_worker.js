@@ -144,7 +144,7 @@ worker.prototype.start = function () {
 
   //2018-01-02_601636
   //  dbsuport.initCodesObj(function () {
-  //      var temp=JSON.parse('{"no":"000672","date":"2018-01-02","min":0,"max":0,"ud":0,"lastprice":0,"face":0,"dde_b":0,"dde_s":0,"state":0,"per":0,"index":2,"savestate":1,"file":"./datafiles/2018-01-02_000672.xls","trytimes":0}');
+  //      var temp=JSON.parse('{"faceId":1292400,"no":"688009","date":"2019-07-22","min":7.69,"max":15.21,"ud":6.42,"lastprice":12.27,"face":0,"dde_b":0,"dde_s":0,"volume":923624409,"turnoverRate":77.98,"turnover":9762393840,"state":0,"per":0,"startprice":11.7,"file":"E:/work/github/SparkEven/fvvm/datafiles/2019-07-22_688009.xls","i":3622,"savestate":1,"downstate":-1,"index":3622,"trytimes":0}');
   //      module.exports.saveToDb(temp, function (err, result) {
   //          module.exports.sendMsg({
   //              index: temp.index,

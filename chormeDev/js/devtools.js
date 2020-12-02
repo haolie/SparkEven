@@ -12,3 +12,4 @@ chrome.devtools.panels.elements.createSidebarPane("Images", function(sidebar)
 	sidebar.setExpression('document.querySelectorAll("img")', 'All Images'); // 通过表达式来指定
 	//sidebar.setObject({aaa: 111, bbb: 'Hello World!'}); // 直接设置显示某个对象
 });
+
