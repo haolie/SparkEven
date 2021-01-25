@@ -11,9 +11,9 @@ import (
 	"sync"
 	"time"
 
-	"../common"
-	"../common/csv"
-	"../db"
+	"lyh/SparkEven/govm/common"
+	"lyh/SparkEven/govm/common/csv"
+	"lyh/SparkEven/govm/db"
 
 	//"reflect"
 	//"strconv"

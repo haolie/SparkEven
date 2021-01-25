@@ -3,7 +3,7 @@ package gather
 import (
 	"fmt"
 
-	"../nohelper"
+	"lyh/SparkEven/govm/nohelper"
 )
 
 type CodeGather struct {

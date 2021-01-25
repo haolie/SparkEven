@@ -9,8 +9,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"../common"
-	"../common/csv"
+	"lyh/SparkEven/govm/common"
+	"lyh/SparkEven/govm/common/csv"
 )
 
 type DataSaver struct {

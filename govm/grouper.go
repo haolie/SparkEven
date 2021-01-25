@@ -1,7 +1,7 @@
 package main
 
 import (
-	"./tools"
+	"lyh/SparkEven/govm/tools"
 )
 
 func main() {

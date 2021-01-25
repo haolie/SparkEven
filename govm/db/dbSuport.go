@@ -6,12 +6,12 @@ import (
 	"strconv"
 	"strings"
 
-	"../common"
+	"lyh/SparkEven/govm/common"
 	_ "github.com/go-sql-driver/mysql"
 )
 
 const (
-	CONSTR       string = "mysql:123456@/vmpark?charset=utf8"
+	CONSTR       string = "haolie:123456@/vmpark?charset=utf8"
 	Mysql_smUInt int    = 65535
 )
 

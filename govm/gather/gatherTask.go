@@ -3,8 +3,8 @@ package gather
 import (
 	"sync"
 
-	"../common"
-	"../db"
+	"lyh/SparkEven/govm/common"
+	"lyh/SparkEven/govm/db"
 )
 
 type GatherTask struct {

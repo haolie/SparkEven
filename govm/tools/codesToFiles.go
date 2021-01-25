@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"../nohelper"
+	"lyh/SparkEven/govm/nohelper"
 )
 
 type CodeGrouper struct {
