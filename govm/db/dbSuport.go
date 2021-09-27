@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"lyh/SparkEven/govm/common"
 	_ "github.com/go-sql-driver/mysql"
+	"lyh/SparkEven/govm/common"
 )
 
 const (
@@ -547,6 +547,28 @@ func (this *MysqlSuport) GetTimePrice(face *common.CodeFace) ([]*common.CodePric
 	}
 
 	return prices, true
+}
+
+func (this *MysqlSuport) GetTimePirceCount(face *common.CodeFace) (count int, err error) {
+	tableName := this.GetPriceTableName(face.Date)
+
+	sqlStr := fmt.Sprintf("select Count(face_id) from %s as a join codeface as b on a.face_id=b.id join tbl_codes as c on b.no_id = c.id where c._no=%d",
+		tableName, face.Code)
+
+	rows, err := this.conn.Query(sqlStr)
+
+	if err != nil {
+		fmt.Println("GetTimePrice 失败")
+		fmt.Println(err)
+		fmt.Println(sqlStr)
+		return 0, err
+	}
+
+	for rows.Next() {
+		rows.Scan(&count)
+	}
+
+	return
 }
 
 func (this *MysqlSuport) SetFaceState(date string, code int, state int) bool {

@@ -19,7 +19,7 @@ func work() {
 	for {
 		t := time.Now()
 		fmt.Println("任务开始：", t)
-		task := gather.CreateGatherTask("2020-09-25")
+		task := gather.CreateGatherTask("2021-02-01")
 		task.StartTask()
 		task.WaitEnd()
 		fmt.Println("任务结束：", time.Now())
