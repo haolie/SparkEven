@@ -218,7 +218,7 @@ func (this *MysqlSuport) UpdateFaceState(date string, code int, state int) {
 }
 
 /*
-保存Facesgit
+保存Facesgit 5520
 */
 func (this *MysqlSuport) SaveCodeFaces(faces []*common.CodeFace) bool {
 
