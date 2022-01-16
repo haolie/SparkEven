@@ -6,7 +6,7 @@ import (
 	"strings"
 	"sync/atomic"
 
-	"lyh/SparkEven/govm/common"
+	"SparkEven/govm/common"
 )
 
 type FileDowner struct {

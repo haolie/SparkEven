@@ -7,7 +7,8 @@ import (
 	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
-	"lyh/SparkEven/govm/common"
+
+	"SparkEven/govm/common"
 )
 
 const (

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"lyh/SparkEven/govm/gather"
-	"lyh/SparkEven/govm/nohelper"
+	"SparkEven/govm/gather"
+	"SparkEven/govm/nohelper"
 )
 
 func main() {
@@ -19,7 +19,7 @@ func work() {
 	for {
 		t := time.Now()
 		fmt.Println("任务开始：", t)
-		task := gather.CreateGatherTask("2021-02-01")
+		task := gather.CreateGatherTask("2022-01-10")
 		task.StartTask()
 		task.WaitEnd()
 		fmt.Println("任务结束：", time.Now())

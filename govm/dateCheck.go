@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"lyh/SparkEven/govm/db"
+	"SparkEven/govm/db"
 )
 
 var dataSupporter *db.MysqlSuport

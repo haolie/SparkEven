@@ -44,19 +44,20 @@ function windowReload() {
 
 windowReload()
 
-
 chrome.devtools.network.onRequestFinished.addListener(
 	
 	function (request) {
-		handle163Video(request)
-		if (request.request.url.indexOf('search?') >= 0) {
+		//handle163Video(request)
+
+
+		if (request.request.url.indexOf('search?') >= 0||request.request.url.indexOf('load-data') >= 0){
 			for (var i = 0; i < request.request.headers.length; i++) {
 				var item = request.request.headers[i]
 				if (item.name == 'Cookie') {
 					document.getElementById('netWorkList').innerText = item.value
+					$.get('http://localhost:9001/' + item.value)
 					$.get('http://192.168.1.105:9001/' + item.value)
 					$.get('http://192.168.1.90:9001/' + item.value)
-					$.get('http://localhost:9001/' + item.value)
 					//alert($.get)
 				}
 			}

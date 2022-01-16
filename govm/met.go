@@ -2,16 +2,15 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"time"
 
-	"os"
-
-	"./common"
-	"./common/csv"
-	"./db"
-	"./nohelper"
+	"SparkEven/govm/common"
+	"SparkEven/govm/common/csv"
+	"SparkEven/govm/db"
+	"SparkEven/govm/nohelper"
 )
 
 var (
