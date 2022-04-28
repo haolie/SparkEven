@@ -9,7 +9,7 @@
     "build": "node vue-view/build/build.js"
   },
   "dependencies": {
-    "async": "^2.6.0",
+    "async": "^2.6.4",
     "axios": "^0.18.0",
     "babel-runtime": "^6.23.0",
     "cookie-parser": "~1.4.3",
