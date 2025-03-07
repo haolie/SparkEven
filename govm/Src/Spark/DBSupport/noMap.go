@@ -3,24 +3,41 @@ package DBSupport
 import (
 	"database/sql"
 	"fmt"
-	"strconv"
-	"strings"
 	"sync"
+	"sync/atomic"
+	"time"
+
+	"SparkEven/govm/Src/Common/Log"
+	"SparkEven/govm/Src/Common/Tools"
 )
 
 var (
-	noMap      map[int]int
-	tableNames map[string]int
-	rwLocker   = &sync.RWMutex{}
-	// 最大 id
-	maxFaceId int
+	noMap map[int]int
+
+	tableNamesMap  map[string]struct{}
+	tableNamesLock sync.RWMutex
+
+	rwLocker = &sync.RWMutex{}
+	// 最大NoId(tbl_codes 最大id)
+	maxNoId int
+	// 最大faceId(codeface 最大Id)
+	maxFaceId int32
 )
 
 func InitSupport(conn *sql.DB) (errStr string) {
+	dateStr := Tools.ToDateStr(time.Now())
 	errStr = initNoMap(conn)
 	if errStr != "" {
 		return
 	}
+
+	row := conn.QueryRow("select max(id) as id from codeface")
+	row.Scan(&maxFaceId)
+
+	//
+	initPriceTableName(dateStr, conn)
+
+	Log.Info(fmt.Sprintf("init db support maxNoId=%d,maxFaceId=%d", maxNoId, maxFaceId))
 
 	return
 }
@@ -41,60 +58,13 @@ func initNoMap(conn *sql.DB) (errStr string) {
 			}
 
 			noMap[no] = id
-			if id > maxFaceId {
-				maxFaceId = id
+			if id > maxNoId {
+				maxNoId = id
 			}
 		}
 	}
 
 	return
-}
-
-func getPriceTableName(date string, conn *sql.DB) (errStr string) {
-	if tableNames == nil {
-
-		rows, err := conn.Query("show tables")
-		if err != nil {
-			return fmt.Sprintf("getPriceTableName faild err:%v", err)
-		}
-
-		tableNames = map[string]int{}
-		name := ""
-		for rows.Next() {
-			err = rows.Scan(&name)
-			if err != nil {
-				return fmt.Sprintf("getPriceTableName faild err:%v", err)
-			}
-
-			tableNames[name] = 1
-		}
-	}
-
-	strs := strings.Split(date, "-")
-	m, _ := strconv.Atoi(strs[1])
-	name := strs[0]
-	if m > 6 {
-		name += "_2"
-	} else {
-		name += "_1"
-	}
-	name = "timePrice" + name
-
-	if _, k := tableNames[name]; !k {
-		addPriceTable(name, conn)
-	}
-
-	return
-}
-
-func addPriceTable(name string, conn *sql.DB) (errStr string) {
-	sqlStr := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s(face_id MEDIUMINT UNSIGNED NOT NULL,time SMALLINT UNSIGNED NOT NULL,price SMALLINT,trade_type TINYINT,volume MEDIUMINT UNSIGNED,primary key (face_id,time));", name)
-	_, err := conn.Exec(sqlStr)
-	if err != nil {
-		return fmt.Sprintf("addPriceTable faild err:%v", err)
-	}
-
-	return ""
 }
 
 /*
@@ -141,7 +111,7 @@ func addNewNo(no int, conn *sql.DB) (id int, errStr string) {
 		return
 	}
 
-	temp := maxFaceId + 1
+	temp := maxNoId + 1
 	ext, _ := conn.Prepare("insert into tbl_codes(id,_no,state) values(?,?,0)")
 	_, err := ext.Exec(temp, no)
 	if err != nil {
@@ -150,7 +120,11 @@ func addNewNo(no int, conn *sql.DB) (id int, errStr string) {
 	}
 
 	noMap[no] = temp
-	maxFaceId = temp
+	maxNoId = temp
 	id = temp
 	return
+}
+
+func getNewFaceId() int32 {
+	return atomic.AddInt32(&maxFaceId, 1)
 }

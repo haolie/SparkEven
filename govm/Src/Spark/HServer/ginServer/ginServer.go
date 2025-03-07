@@ -28,24 +28,37 @@ func init() {
 }
 
 var (
-	startOnce sync.Once
-	rootMap   = make(map[string]func(c *gin.Context), 8)
-	status    int32
+	startOnce   sync.Once
+	rootPostMap = make(map[string]func(c *gin.Context), 8)
+	rootGetMap  = make(map[string]func(c *gin.Context), 8)
+	status      int32
 )
 
-func RegisterRoot(key string, f func(c *gin.Context)) {
+func RegisterRoot(key string, isPost bool, f func(c *gin.Context)) {
 	if status > 0 {
 		Log.Error("can not register root after started")
 		return
 	}
 
-	_, exist := rootMap[key]
+	if isPost {
+		_, exist := rootPostMap[key]
+		if exist {
+			Log.Error(fmt.Sprintf("%s:k={%s} already exist", con_fileName, key))
+			return
+		}
+
+		rootPostMap[key] = f
+
+		return
+	}
+
+	_, exist := rootGetMap[key]
 	if exist {
 		Log.Error(fmt.Sprintf("%s:k={%s} already exist", con_fileName, key))
 		return
 	}
 
-	rootMap[key] = f
+	rootGetMap[key] = f
 }
 
 func startHServer(ctx context.Context) (errStr string) {
@@ -58,8 +71,13 @@ func startHServer(ctx context.Context) (errStr string) {
 			}
 
 			engine := gin.Default()
-			for k, v := range rootMap {
-				str := "/express/h/" + k
+			for k, v := range rootPostMap {
+				str := "/code/" + k
+				engine.POST(str, v)
+			}
+
+			for k, v := range rootGetMap {
+				str := "/code/" + k
 				engine.GET(str, v)
 			}
 

@@ -1,25 +1,22 @@
 package DBSupport
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
 
 	"SparkEven/govm/Src/Common/Def"
 	"SparkEven/govm/Src/Interface"
-	"SparkEven/govm/Src/Spark/DBSupport/dbFillImpl"
+	"SparkEven/govm/Src/Model"
 )
 
 var (
-	implMap map[string]Interface.IDbModelFill
+	implMap  map[string]Interface.IDbModelFill
+	mPageKey = "mysqlSupport"
 )
 
-func init() {
-	implMap = make(map[string]Interface.IDbModelFill, 2)
-	implMap[Def.Model_Key_CodeFace] = &dbFillImpl.CodeFaceImpl{}
-}
+func InsertList(conn *sql.DB, modelList []Interface.IDbModel) string {
 
-func InsertList(ctx context.Context, conn *sql.DB, modelList []Interface.IDbModel) error {
+	fillImpl := implMap[Def.Model_Key_CodeFace]
 	i, count := 0, 300
 	for {
 		index := i + count
@@ -29,19 +26,27 @@ func InsertList(ctx context.Context, conn *sql.DB, modelList []Interface.IDbMode
 
 		array := modelList[i:index]
 
-		var vStr = ""
-		for _, item := range array {
+		var vStr = fillImpl.GetInsertPerStr()
+		for i, item := range array {
 
-			if len(vStr) > 0 {
-				vStr += ";"
+			if i > 0 {
+				vStr += ","
 			}
-			vStr += item.CreateInsertStr()
 
+			codeFace := item.(*Model.CodeFace)
+			noId, errStr := GetOrAddId(codeFace.Code, conn)
+			if errStr != "" {
+				return errStr
+			}
+
+			codeFace.ID = int(getNewFaceId())
+			vStr += fillImpl.GetInsertValueStr(item, noId)
 		}
 
+		vStr = vStr + ";"
 		_, err := conn.Exec(vStr)
 		if err != nil {
-			return err
+			return fmt.Sprintf("mysqlSupport.InsertList err=%v sql=%s", err, vStr)
 		}
 		i += count
 		if i >= len(modelList) {
@@ -49,10 +54,25 @@ func InsertList(ctx context.Context, conn *sql.DB, modelList []Interface.IDbMode
 		}
 	}
 
-	return nil
+	return ""
 }
 
-func GetCodeFace(ctx context.Context, conn *sql.DB, code int, date string) (faceList []Interface.IDbModel, errStr string) {
+func getDateCodeFace(conn *sql.DB, code int, date string) (face *Model.CodeFace, errStr Model.Err) {
+	list, er := GetCodeFace(conn, code, date)
+	errStr = Model.Err(er)
+	if errStr.Exists() {
+		return
+	}
+
+	if len(list) != 1 {
+		return
+	}
+
+	face = list[0].(*Model.CodeFace)
+	return
+}
+
+func GetCodeFace(conn *sql.DB, code int, date string) (faceList []Interface.IDbModel, errStr string) {
 
 	if date == "" && code < 0 {
 		errStr = fmt.Sprintf(" GetCodeFace 缺少查询条件")

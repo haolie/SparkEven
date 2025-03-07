@@ -3,6 +3,8 @@ package MPark
 import (
 	"context"
 	"fmt"
+
+	"SparkEven/govm/Src/Common/Log"
 )
 
 const (
@@ -79,9 +81,11 @@ func RunLoad(ctx context.Context) (errList []string, err error) {
 
 	if len(errList) > 0 {
 		status = runStep_error
+		Log.Info("Load Failed")
 		return errList, nil
 	}
 
+	Log.Info("Load Complete")
 	status = runStep_starting
 	for _, cb := range startMap {
 		tempList := cb(ctx)
@@ -93,10 +97,12 @@ func RunLoad(ctx context.Context) (errList []string, err error) {
 	if len(errList) > 0 {
 		if len(errList) > 0 {
 			status = runStep_error
+			Log.Info("Start Failed")
 			return errList, nil
 		}
 	}
 
+	Log.Info("Start Complete")
 	status = runStep_startAfter
 	for _, cb := range afterMap {
 		tempList := cb(ctx)
@@ -108,10 +114,13 @@ func RunLoad(ctx context.Context) (errList []string, err error) {
 	if len(errList) > 0 {
 		if len(errList) > 0 {
 			status = runStep_error
+			Log.Info("Run After Failed")
 			return errList, nil
 		}
 	}
 
+	Log.Info("Run After Complete")
+	Log.Info("----- SparkEven Start Success ----")
 	status = runStep_runing
 
 	return

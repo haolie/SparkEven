@@ -102,9 +102,9 @@ func (writer *logWriter) newWriter() error {
 		return err
 	}
 
-	h, mi, s := t.Clock()
-	s = h*60*60 + mi*60 + s
-	t = t.Add(-time.Second*time.Duration(s)).AddDate(0, 0, 1)
+	_, mi, s := t.Clock()
+	s = mi*60 + s
+	t = t.Add(-time.Second * time.Duration(s)).Add(time.Hour)
 	writer.logEndTime = t.Unix()
 
 	return nil

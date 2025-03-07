@@ -1,1 +1,7 @@
 1
+
+sc create SparkEven binPath="D:\Program Files\SparkEven\SparkEven.exe"
+sc delete SparkEven
+
+
+nssm install SparkEvenT "d:/program files/SparkEven/SparkEven.exe"

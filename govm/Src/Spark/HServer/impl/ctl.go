@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	ginServer.RegisterRoot(Def.Http_Key_Ctl, codeGatherCtl)
+	ginServer.RegisterRoot(Def.Http_Key_Ctl, false, codeGatherCtl)
 }
 
 var tempStatus = 0

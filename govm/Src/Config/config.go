@@ -18,7 +18,7 @@ func UpdateConfig(k string, v interface{}) {
 	configMap[k] = v
 }
 
-func GetValue[T int32 | int64 | string](k string) (v T, exists bool) {
+func GetValue[T int32 | int64 | string | bool](k string) (v T, exists bool) {
 	temp, exists := configMap[k]
 	if exists {
 		v = temp.(T)

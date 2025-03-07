@@ -27,9 +27,3 @@ func (codeFace *CodeFace) CreateInsertStr() string {
 func (codeFace *CodeFace) GetModelKey() string {
 	return ""
 }
-
-type FaceEx struct {
-	CodeFace
-	DownTimes int
-	FileState int //0 未开始处理  1  已完成处理  2 正在下载  3 已下载  4 数据读取中 5 数据已读取等待保存  8 数据错误
-}

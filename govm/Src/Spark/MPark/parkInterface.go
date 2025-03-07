@@ -6,4 +6,6 @@ import (
 
 var (
 	CodeGather Interface.ICodeGather
+
+	DbSupport Interface.IDbSupport
 )

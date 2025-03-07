@@ -5,20 +5,24 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"strconv"
+	"path"
 	"syscall"
+	"time"
 
 	"SparkEven/govm/Src/Common/Def"
 	"SparkEven/govm/Src/Common/Log"
 	"SparkEven/govm/Src/Config"
-	"SparkEven/govm/Src/Spark/DBSupport"
 	"SparkEven/govm/Src/Spark/MPark"
 
 	_ "SparkEven/govm/Src/Spark"
 )
 
 func main() {
-	Config.Load("")
+
+	err := Config.Load(path.Dir(os.Args[0]))
+	if err != nil {
+		panic("load config file error:" + err.Error())
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	//errList, err := MPark.RunLoad(ctx)
@@ -45,33 +49,38 @@ func main() {
 		}
 	}
 
-	conn, errStr := DBSupport.CreateConn()
-	if errStr != "" {
-		Log.Error(errStr)
-		return
+	isGather, exists := Config.GetValue[bool](Def.Config_Gather_Open)
+	if exists && isGather {
+		MPark.CodeGather.StartCodeGather(ctx, time.Now())
 	}
 
-	errStr = DBSupport.InitSupport(conn)
-	if errStr != "" {
-		Log.Error(errStr)
-		return
-	}
-
-	Log.Info("park start success")
-
-	testNo, exists := DBSupport.GetNoById(0)
-	if exists {
-		Log.Debug(fmt.Sprintf("get id=%d no=%d", 0, testNo))
-	}
-
-	faceList, errStr := DBSupport.GetCodeFace(ctx, conn, 1600720, "")
-	if errStr != "" {
-		Log.Error(errStr)
-	}
+	//conn, errStr := DBSupport.CreateConn()
+	//if errStr != "" {
+	//	Log.Error(errStr)
+	//	return
+	//}
+	//
+	//errStr = DBSupport.InitSupport(conn)
+	//if errStr != "" {
+	//	Log.Error(errStr)
+	//	return
+	//}
+	//
+	//Log.Info("park start success")
+	//
+	//testNo, exists := DBSupport.GetNoById(0)
+	//if exists {
+	//	Log.Debug(fmt.Sprintf("get id=%d no=%d", 0, testNo))
+	//}
+	//
+	//faceList, errStr := DBSupport.GetCodeFace(ctx, conn, 1600720, "")
+	//if errStr != "" {
+	//	Log.Error(errStr)
+	//}
 
 	c := make(chan os.Signal)
 	signal.Notify(c, os.Interrupt, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
-	Log.Debug(strconv.Itoa(len(faceList)))
+
 	go waitExit(c, cancel)
 
 	waitEx := ctx.Done()
