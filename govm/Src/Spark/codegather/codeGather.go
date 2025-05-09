@@ -18,6 +18,7 @@ func init() {
 }
 
 func startGather(ctx context.Context, startDate time.Time) (errStr Model.Err) {
+	resetCook(true)
 	Log.Info(fmt.Sprintf("start gather startDate:%v", startDate))
 	n := time.Now()
 	n = time.Date(n.Year(), n.Month(), n.Day(), 0, 0, 0, 0, time.Local)
@@ -87,33 +88,50 @@ func gatherDateFace(ctx context.Context, conn *sql.DB, dateStr string) (faceList
 
 func startPriceGather(ctx context.Context, conn *sql.DB, faceList []*Model.CodeFace, dateStr string) (errStr Model.Err) {
 	count := len(faceList)
-	errMap := make(map[int]Model.Err, 8)
-	for i, face := range faceList {
-		if face.State == 1 {
-			continue
-		}
-
-		priceList, faceErr := gatherFacePrice(face)
-		if faceErr.Exists() {
-			errMap[face.Code] = faceErr
-			continue
-		}
-
-		if len(priceList) == 0 {
-			continue
-		}
-
-		faceErr = MPark.DbSupport.SaveFacePrices(conn, face, priceList)
-		if faceErr.Exists() {
-			errMap[face.Code] = faceErr
-			continue
-		}
-
-		Log.Debug(fmt.Sprintf("gatherFacePrice success code:%d   %d/%d", face.Code, i, count))
-		time.Sleep(con_gatherWait)
+	tryTimes, exists := Config.GetValue[int64](Def.Config_Gather_FailTimes)
+	if !exists {
+		panic(fmt.Errorf("need %s Config", Def.Config_Gather_FailTimes))
 	}
 
-	onFinished(errMap, count, dateStr)
+	// 如有采集失败 重复尝试次数
+	var failNum int64 = 0
+	for ; failNum < tryTimes; failNum++ {
+		errMap := make(map[int]Model.Err, 8)
+		for i, face := range faceList {
+			if face.State == 1 {
+				continue
+			}
+
+			priceList, faceErr := gatherFacePrice(face)
+			if faceErr.Exists() {
+				errMap[face.Code] = faceErr
+				continue
+			}
+
+			if len(priceList) == 0 {
+				continue
+			}
+
+			faceErr = MPark.DbSupport.SaveFacePrices(conn, face, priceList)
+			if faceErr.Exists() {
+				errMap[face.Code] = faceErr
+				continue
+			}
+
+			if i%100 == 0 {
+				Log.Info(fmt.Sprintf("gatherFacePrice success code:%d   %d/%d", face.Code, i, count))
+			} else {
+				Log.Debug(fmt.Sprintf("gatherFacePrice success code:%d   %d/%d", face.Code, i, count))
+			}
+
+			time.Sleep(con_gatherWait)
+		}
+
+		onFinished(errMap, count, dateStr, failNum+1)
+		if len(errMap) == 0 {
+			break
+		}
+	}
 
 	return
 }

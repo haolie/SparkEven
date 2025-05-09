@@ -222,7 +222,7 @@ func GetNocodesFromWeb(ctx context.Context, date string) (faceList []*Model.Code
 		// 每请求15次后刷新cookie
 		if (i+1)%15 == 0 {
 			// 清空cookie 后重启获取token
-			resetCook()
+			resetCook(false)
 			tObj, errStr = getToken(ctx, date)
 			if errStr.Exists() {
 				return
@@ -234,7 +234,7 @@ func GetNocodesFromWeb(ctx context.Context, date string) (faceList []*Model.Code
 			var list []*Model.CodeFace
 			list, errStr = getNoFun(tObj.token, i+1, perCount, clMaps)
 			if errStr.Exists() {
-				resetCook()
+				resetCook(false)
 				continue
 			}
 
@@ -255,7 +255,7 @@ func GetNocodesFromWeb(ctx context.Context, date string) (faceList []*Model.Code
 	}
 
 	Log.Info(fmt.Sprintf("gatherFinished date=%s  num=%d  total=%d", date, len(faceList), tObj.count))
-	resetCook()
+	resetCook(false)
 	return
 }
 

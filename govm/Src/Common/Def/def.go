@@ -22,6 +22,7 @@ const (
 	Config_Gather_StartTime = "gather_starttime"
 	Config_Gather_FailTimes = "gather_failtimes"
 	Config_Gather_Open      = "gather_open"
+	Config_Group_SavePath   = "group_savepath"
 
 	Model_Key_CodeFace = "CodeFace"
 
@@ -29,6 +30,7 @@ const (
 	Http_Key_Ctl       = "ctl"
 	Http_key_FillCook  = "fillcook"
 	Http_key_CodePrice = "codePrice"
+	Http_key_CodeGroup = "codeGroup"
 
 	// 最大成交量
 	Max_Volume = 16777215

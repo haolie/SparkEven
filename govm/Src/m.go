@@ -49,34 +49,7 @@ func main() {
 		}
 	}
 
-	isGather, exists := Config.GetValue[bool](Def.Config_Gather_Open)
-	if exists && isGather {
-		MPark.CodeGather.StartCodeGather(ctx, time.Now())
-	}
-
-	//conn, errStr := DBSupport.CreateConn()
-	//if errStr != "" {
-	//	Log.Error(errStr)
-	//	return
-	//}
-	//
-	//errStr = DBSupport.InitSupport(conn)
-	//if errStr != "" {
-	//	Log.Error(errStr)
-	//	return
-	//}
-	//
-	//Log.Info("park start success")
-	//
-	//testNo, exists := DBSupport.GetNoById(0)
-	//if exists {
-	//	Log.Debug(fmt.Sprintf("get id=%d no=%d", 0, testNo))
-	//}
-	//
-	//faceList, errStr := DBSupport.GetCodeFace(ctx, conn, 1600720, "")
-	//if errStr != "" {
-	//	Log.Error(errStr)
-	//}
+	start(ctx)
 
 	c := make(chan os.Signal)
 	signal.Notify(c, os.Interrupt, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
@@ -94,5 +67,18 @@ func waitExit(signalChan chan os.Signal, cancel context.CancelFunc) {
 			Log.Info(fmt.Sprintf("exit signal :%v", i))
 			cancel()
 		}
+	}
+}
+
+func start(ctx context.Context) {
+	defer func() {
+		if r := recover(); r != nil {
+			Log.Error(fmt.Sprintf("%v", r))
+		}
+	}()
+
+	isGather, exists := Config.GetValue[bool](Def.Config_Gather_Open)
+	if exists && isGather {
+		MPark.CodeGather.StartCodeGather(ctx, time.Now())
 	}
 }

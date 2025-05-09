@@ -50,7 +50,8 @@ func (impl impl) StartCodeGather(ctx context.Context, stateDate time.Time) (err 
 				break
 			case <-time.After(startTime.Sub(time.Now())):
 				Log.Info("------start start start -----")
-				startGather(ctx, stateDate)
+				tx, _ := context.WithTimeout(ctx, time.Hour*7)
+				startGather(tx, stateDate)
 				Log.Info("------end end end -----")
 				startTime = startTime.AddDate(0, 0, 1)
 				stateDate = startTime
@@ -68,8 +69,20 @@ func (impl impl) FillCookie(cookie string) {
 	}
 }
 
-func onFinished(errMap map[int]Model.Err, total int, dateStr string) {
-	Log.Info(fmt.Sprintf("price gather finished date=%s total=%d  err=%d", dateStr, total, len(errMap)))
+func (impl impl) CodeGroup(date string) (err Model.Err) {
+	savePath, exists := Config.GetValue[string](Def.Config_Group_SavePath)
+	if !exists {
+		return
+	}
+
+	group := CreateGroupper(date, savePath, 400)
+	group.Start(context.Background())
+
+	return
+}
+
+func onFinished(errMap map[int]Model.Err, total int, dateStr string, tryNum int64) {
+	Log.Info(fmt.Sprintf("price gather finished date=%s total=%d  err=%d  tryNum=%v", dateStr, total, len(errMap), tryNum))
 	if len(errMap) == 0 {
 		return
 	}

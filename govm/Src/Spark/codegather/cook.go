@@ -2,6 +2,7 @@ package codegather
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -39,7 +40,7 @@ func waitCookStr(ctx context.Context) (cookieStr string, er Model.Err) {
 				return
 			}
 
-			Log.Warn("waitCookStr")
+			Log.Warn(fmt.Sprintf("waitCookStr cookStr:%s  newStr:%s  exprieTime:%v", cookStr, newCookStr, cookExpireTime))
 			time.Sleep(time.Second)
 		}
 	}
@@ -81,9 +82,15 @@ func getCookStr() string {
 
 }
 
-func resetCook() {
+func resetCook(isClear bool) {
 	cookLocker.Lock()
 	defer cookLocker.Unlock()
+
+	if isClear {
+		cookStr = ""
+		newCookStr = ""
+		return
+	}
 
 	if newCookStr != "" {
 		cookStr = newCookStr
