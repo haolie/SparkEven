@@ -34,6 +34,10 @@ func codePrice(ctx *gin.Context) {
 		ctx.JSON(200, HttpTools.CreateErrHSResponse("need code params"))
 	}
 
+	if code <= 699999 {
+		code += 1000000
+	}
+
 	conn, errStr := MPark.DbSupport.GetConn()
 	if errStr.Exists() {
 		Log.Error(string(errStr))

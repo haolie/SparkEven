@@ -82,3 +82,5 @@ func start(ctx context.Context) {
 		MPark.CodeGather.StartCodeGather(ctx, time.Now())
 	}
 }
+
+// SELECT tc._no,cf._date,tp.time,tp.price,tp.volume FROM `timeprice2025_1` tp JOIN `codeface` cf ON tp.face_id=cf.id JOIN `tbl_codes` tc ON cf.no_id=tc.id WHERE tc._no=1600699 AND cf._date='2025-05-07'
