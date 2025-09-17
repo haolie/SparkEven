@@ -10,7 +10,7 @@ import (
 type ICodeGather interface {
 	StartCodeGather(ctx context.Context, stateDate time.Time) (err Model.Err)
 
-	FillCookie(cookie string)
+	FillCookie(cookie string) int
 
 	CodeGroup(date string) (err Model.Err)
 }

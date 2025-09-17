@@ -17,44 +17,72 @@ const (
 	con_gatherWait = 1200 * time.Millisecond
 )
 
-type impl int32
+var (
+	startH int
+	startM int
+	startS int
+)
 
-func (impl impl) StartCodeGather(ctx context.Context, stateDate time.Time) (err Model.Err) {
+func loadStartTime() string {
+	startTimeStr, exists := Config.GetValue[string](Def.Config_Gather_StartTime)
+	if !exists {
+		return fmt.Sprintf("need %s Config", Def.Config_Gather_StartTime)
+	}
+
+	var success bool
+	startH, startM, startS, success = Tools.ParseTimeStr(startTimeStr)
+	if !success {
+		return fmt.Sprintf("parse config %s err", Def.Config_Gather_StartTime)
+	}
+
+	return ""
+}
+
+type impl struct {
+	startTime    time.Time
+	nextCookTime time.Time
+}
+
+func NewImpl() *impl {
+	return &impl{
+		startTime: time.Now().Add(time.Minute),
+	}
+}
+
+func getStartTime(t time.Time) time.Time {
+	return time.Date(t.Year(), t.Month(), t.Day(), startH, startM, startS, 0, time.Local)
+}
+
+func (impl *impl) StartCodeGather(ctx context.Context, stateDate time.Time) (err Model.Err) {
 
 	go func() {
-		startTimeStr, exists := Config.GetValue[string](Def.Config_Gather_StartTime)
-		if !exists {
-			panic(fmt.Sprintf("need %s Config", Def.Config_Gather_StartTime))
-		}
-
-		h, m, s, success := Tools.ParseTimeStr(startTimeStr)
-		if !success {
-			panic(fmt.Sprintf("parse config %s err", Def.Config_Gather_StartTime))
-		}
 
 		now := time.Now()
-		startTime := time.Date(now.Year(), now.Month(), now.Day(), h, m, s, 0, time.Local)
-		if startTime.Before(now) {
+		impl.startTime = getStartTime(now)
+		impl.nextCookTime = impl.startTime
+		if impl.startTime.Before(now) {
 			Log.Info("------start start start -----")
-			startGather(ctx, stateDate)
+			startGather(ctx, stateDate, impl)
 			Log.Info("------end end end -----")
-			startTime = startTime.AddDate(0, 0, 1)
+			impl.startTime = impl.startTime.AddDate(0, 0, 1)
+			impl.nextCookTime = impl.startTime
 		}
 
 		//runTime := now.Add(-time.Duration(now.Minute()%30*60+now.Second()) * time.Second)
 		for {
-			Log.Info(fmt.Sprintf("wait gatherTime:%v ", startTime))
+			Log.Info(fmt.Sprintf("wait gatherTime:%v ", impl.startTime))
 
 			select {
 			case <-ctx.Done():
 				break
-			case <-time.After(startTime.Sub(time.Now())):
+			case <-time.After(impl.startTime.Sub(time.Now())):
 				Log.Info("------start start start -----")
 				tx, _ := context.WithTimeout(ctx, time.Hour*7)
-				startGather(tx, stateDate)
+				startGather(tx, stateDate, impl)
 				Log.Info("------end end end -----")
-				startTime = startTime.AddDate(0, 0, 1)
-				stateDate = startTime
+				impl.startTime = impl.startTime.AddDate(0, 0, 1)
+				impl.nextCookTime = impl.startTime
+				stateDate = impl.startTime
 			}
 		}
 	}()
@@ -62,10 +90,17 @@ func (impl impl) StartCodeGather(ctx context.Context, stateDate time.Time) (err 
 	return
 }
 
-func (impl impl) FillCookie(cookie string) {
+func (impl *impl) FillCookie(cookie string) int {
 	old := getCookStr()
 	if len(old) == 0 {
 		fillNewCook(cookie)
+	}
+
+	n := time.Now()
+	if impl.nextCookTime.After(n) {
+		return int(impl.nextCookTime.Sub(n).Seconds())
+	} else {
+		return 20
 	}
 }
 

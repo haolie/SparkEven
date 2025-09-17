@@ -13,11 +13,26 @@ import (
 	"SparkEven/govm/Src/Spark/MPark"
 )
 
+const (
+	mName = "codeGather"
+)
+
 func init() {
-	MPark.CodeGather = new(impl)
+	MPark.CodeGather = NewImpl()
+	MPark.RegisterLoad(mName, onLoad)
 }
 
-func startGather(ctx context.Context, startDate time.Time) (errStr Model.Err) {
+func onLoad(ctx context.Context) []string {
+	errList := make([]string, 0)
+	errStr := loadStartTime()
+	if errStr != "" {
+		errList = append(errList, errStr)
+	}
+
+	return errList
+}
+
+func startGather(ctx context.Context, startDate time.Time, imp *impl) (errStr Model.Err) {
 	resetCook(true)
 	Log.Info(fmt.Sprintf("start gather startDate:%v", startDate))
 	n := time.Now()
@@ -52,6 +67,7 @@ func startGather(ctx context.Context, startDate time.Time) (errStr Model.Err) {
 			}
 		}
 
+		imp.nextCookTime = imp.startTime.AddDate(0, 0, 1)
 		if len(faceList) > 0 && dateStr == curDateStr {
 			errStr = startPriceGather(ctx, conn, faceList, dateStr)
 			if errStr.Exists() {

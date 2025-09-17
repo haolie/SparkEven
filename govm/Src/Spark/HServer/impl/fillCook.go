@@ -28,7 +28,7 @@ func fillCook(ctx *gin.Context) {
 		ctx.JSON(200, HttpTools.CreateErrHSResponse("need cook"))
 	}
 
-	MPark.CodeGather.FillCookie(cook)
+	s := MPark.CodeGather.FillCookie(cook)
 
-	ctx.JSON(200, HttpTools.CreateSuccessHSResponse("ok"))
+	ctx.JSON(200, HttpTools.CreateSuccessHSResponse(s))
 }

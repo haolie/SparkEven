@@ -108,6 +108,7 @@ func fillNewCook(setStr string) {
 	if cookStr == "" {
 		cookStr = setStr
 		newCookStr = ""
+		cookExpireTime = time.Now().Add(cookExpireSeconds * time.Second)
 	} else {
 		newCookStr = cookStr
 	}
