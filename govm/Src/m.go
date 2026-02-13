@@ -12,6 +12,7 @@ import (
 	"SparkEven/govm/Src/Common/Def"
 	"SparkEven/govm/Src/Common/Log"
 	"SparkEven/govm/Src/Config"
+	"SparkEven/govm/Src/Model"
 	"SparkEven/govm/Src/Spark/MPark"
 
 	_ "SparkEven/govm/Src/Spark"
@@ -40,6 +41,12 @@ func main() {
 	errList, err := MPark.RunLoad(ctx)
 	if err != nil {
 		panic(err)
+	}
+
+	// sysConfig
+	errStr := sysConfig()
+	if errStr != "" {
+		panic(errStr)
 	}
 
 	if len(errList) > 0 {
@@ -81,6 +88,24 @@ func start(ctx context.Context) {
 	if exists && isGather {
 		MPark.CodeGather.StartCodeGather(ctx, time.Now())
 	}
+}
+
+func sysConfig() Model.Err {
+	conn, errStr := MPark.DbSupport.GetConn()
+	if errStr != "" {
+		return errStr
+	}
+
+	list, errStr := MPark.DbSupport.GetSysConfigList(conn)
+	if errStr != "" {
+		return errStr
+	}
+
+	for _, v := range list {
+		Config.AddConfig(v.Key, v.Value)
+	}
+
+	return errStr
 }
 
 // SELECT tc._no,cf._date,tp.time,tp.price,tp.volume FROM `timeprice2025_1` tp JOIN `codeface` cf ON tp.face_id=cf.id JOIN `tbl_codes` tc ON cf.no_id=tc.id WHERE tc._no=1600699 AND cf._date='2025-05-07'

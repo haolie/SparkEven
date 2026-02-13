@@ -30,52 +30,57 @@ func init() {
 }
 
 func getToken(ctx context.Context, date string) (result *tokenObj, er Model.Err) {
-	cookieStr, er := waitCookStr(ctx)
-	result = &tokenObj{}
+	for i := 0; i < 10; i++ {
+		var cookieStr string
+		cookieStr, er = waitCookStr(ctx)
+		result = &tokenObj{}
 
-	//cookieStr = "other_uid=Ths_iwencai_Xuangu_e5fmb9qchj3cm6xv3l4nelwsyrp68w1b; ta_random_userid=1mloc8i7wd; cid=481a7d61536bcfeabf2484348407282e1736501850; u_ukey=A10702B8689642C6BE607730E11E6E4A; u_uver=1.0.0; u_dpass=dXNNRcqmggrrHl%2BbDMF6kabLkCS3lvXho4XHaD%2B0IYy5JFpH92JkrfXMX5U3obovHi80LrSsTFH9a%2B6rtRvqGg%3D%3D; u_did=3ADAE2A5B02C4FAC9BF2F0D5C7756EC8; u_ttype=WEB; ttype=WEB; user=MDpoYW9saWU6Ok5vbmU6NTAwOjI3NDUwMjY2MDo3LDExMTExMTExMTExLDQwOzQ0LDExLDQwOzYsMSw0MDs1LDEsNDA7MSwxMDEsNDA7MiwxLDQwOzMsMSw0MDs1LDEsNDA7OCwwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMSw0MDsxMDIsMSw0MDoyNzo6OjI2NDUwMjY2MDoxNzM5NDM2NjAzOjo6MTQzMzc3NjAyMDo2MDQ4MDA6MDoxZTUzY2U1MDdhZGQyMGE3MGZjYmIyMjkwZjQ1ODUyZGY6ZGVmYXVsdF80OjA%3D; userid=264502660; u_name=haolie; escapename=haolie; ticket=9c547d07a178c0acfffa1aa1a200e9d6; user_status=0; utk=71d6ea1e97d4d942da4f56e1f01508ac; PHPSESSID=93ab62e95d8fef90927b10df56e98b25; cid=481a7d61536bcfeabf2484348407282e1736501850; ComputerID=481a7d61536bcfeabf2484348407282e1736501850; WafStatus=0; v=A-uvOxpICJ-pvVRLjndFb9zJegTQAP-CeRTDNl1oxyqB_AX65dCP0onkU55u"
-	client := &http.Client{}
-	var url = "http://www.iwencai.com/stockpick/load-data?typed=0&preParams=&ts=1&f=1&qs=result_original&selfsectsn=&querytype=stock&searchfilter=&tid=stockpick&w=%E6%B6%A8%E8%B7%8C" +
-		date +
-		"+%E4%BB%B7%E6%A0%BC" +
-		date +
-		"+%E6%88%90%E4%BA%A4%E9%87%8F" +
-		date +
-		"+%E6%8D%A2%E6%89%8B" +
-		date +
-		"+&queryarea="
+		//cookieStr = "other_uid=Ths_iwencai_Xuangu_e5fmb9qchj3cm6xv3l4nelwsyrp68w1b; ta_random_userid=1mloc8i7wd; cid=481a7d61536bcfeabf2484348407282e1736501850; u_ukey=A10702B8689642C6BE607730E11E6E4A; u_uver=1.0.0; u_dpass=dXNNRcqmggrrHl%2BbDMF6kabLkCS3lvXho4XHaD%2B0IYy5JFpH92JkrfXMX5U3obovHi80LrSsTFH9a%2B6rtRvqGg%3D%3D; u_did=3ADAE2A5B02C4FAC9BF2F0D5C7756EC8; u_ttype=WEB; ttype=WEB; user=MDpoYW9saWU6Ok5vbmU6NTAwOjI3NDUwMjY2MDo3LDExMTExMTExMTExLDQwOzQ0LDExLDQwOzYsMSw0MDs1LDEsNDA7MSwxMDEsNDA7MiwxLDQwOzMsMSw0MDs1LDEsNDA7OCwwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMSw0MDsxMDIsMSw0MDoyNzo6OjI2NDUwMjY2MDoxNzM5NDM2NjAzOjo6MTQzMzc3NjAyMDo2MDQ4MDA6MDoxZTUzY2U1MDdhZGQyMGE3MGZjYmIyMjkwZjQ1ODUyZGY6ZGVmYXVsdF80OjA%3D; userid=264502660; u_name=haolie; escapename=haolie; ticket=9c547d07a178c0acfffa1aa1a200e9d6; user_status=0; utk=71d6ea1e97d4d942da4f56e1f01508ac; PHPSESSID=93ab62e95d8fef90927b10df56e98b25; cid=481a7d61536bcfeabf2484348407282e1736501850; ComputerID=481a7d61536bcfeabf2484348407282e1736501850; WafStatus=0; v=A-uvOxpICJ-pvVRLjndFb9zJegTQAP-CeRTDNl1oxyqB_AX65dCP0onkU55u"
+		client := &http.Client{}
+		var url = "http://www.iwencai.com/stockpick/load-data?typed=0&preParams=&ts=1&f=1&qs=result_original&selfsectsn=&querytype=stock&searchfilter=&tid=stockpick&w=%E6%B6%A8%E8%B7%8C" +
+			date +
+			"+%E4%BB%B7%E6%A0%BC" +
+			date +
+			"+%E6%88%90%E4%BA%A4%E9%87%8F" +
+			date +
+			"+%E6%8D%A2%E6%89%8B" +
+			date +
+			"+&queryarea="
 
-	request, err := http.NewRequest("GET", url, nil)
-	request.Header.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7")
-	//request.Header.Add("Accept-Encoding", "gzip, deflate, br, zstd")
-	request.Header.Add("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7")
-	request.Header.Add("Cache-Control", "no-cache")
-	request.Header.Add("Connection", "keep-alive")
-	request.Header.Add("Host", "www.iwencai.com")
-	request.Header.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36")
-	request.Header.Add("Cookie", cookieStr)
-	resp, err := client.Do(request)
-	if err != nil {
-		er = Model.Err(fmt.Sprintf("codegather.getToken client.Do err=%v", err))
-		return
-	}
+		request, err := http.NewRequest("GET", url, nil)
+		request.Header.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7")
+		//request.Header.Add("Accept-Encoding", "gzip, deflate, br, zstd")
+		request.Header.Add("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7")
+		request.Header.Add("Cache-Control", "no-cache")
+		request.Header.Add("Connection", "keep-alive")
+		request.Header.Add("Host", "www.iwencai.com")
+		request.Header.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36")
+		request.Header.Add("Cookie", cookieStr)
+		resp, err := client.Do(request)
+		if err != nil {
+			er = Model.Err(fmt.Sprintf("codegather.getToken client.Do err=%v", err))
+			resetCook(false)
+			continue
+		}
 
-	defer resp.Body.Close()
-	resultByte, err := io.ReadAll(resp.Body)
-	if err != nil {
-		er = Model.Err(fmt.Sprintf("codegather.getToken io.ReadAll err=%v", err))
-		return
-	}
+		defer resp.Body.Close()
+		resultByte, err := io.ReadAll(resp.Body)
+		if err != nil {
+			er = Model.Err(fmt.Sprintf("codegather.getToken io.ReadAll err=%v", err))
+			resetCook(false)
+			continue
+		}
 
-	r1 := jsoniter.Get(resultByte, "data", "result")
-	count, _ := strconv.Atoi(r1.Get("code_count").ToString())
-	result.count = count
-	result.token = r1.Get("token").ToString()
-	jsonBlob := []byte(r1.Get("columnsIndexID").ToString())
-	err = json.Unmarshal(jsonBlob, &result.columns)
+		r1 := jsoniter.Get(resultByte, "data", "result")
+		count, _ := strconv.Atoi(r1.Get("code_count").ToString())
+		result.count = count
+		result.token = r1.Get("token").ToString()
+		jsonBlob := []byte(r1.Get("columnsIndexID").ToString())
+		err = json.Unmarshal(jsonBlob, &result.columns)
 
-	if err != nil {
-		er = Model.Err(fmt.Sprintf("codegather.getToken json.Unmarshal err=%v", err))
+		if err != nil {
+			er = Model.Err(fmt.Sprintf("codegather.getToken json.Unmarshal err=%v content=%s", err, string(resultByte)))
+		}
 	}
 
 	return
@@ -229,12 +234,13 @@ func GetNocodesFromWeb(ctx context.Context, date string) (faceList []*Model.Code
 			}
 		}
 
-		// 因cookie 可能失效  尝试5次
-		for t := 0; t < 5; t++ {
+		// 因cookie 可能失效  尝试25次
+		for t := 0; t < 25; t++ {
 			var list []*Model.CodeFace
 			list, errStr = getNoFun(tObj.token, i+1, perCount, clMaps)
 			if errStr.Exists() {
 				resetCook(false)
+				tObj, errStr = getToken(ctx, date)
 				continue
 			}
 
@@ -250,6 +256,7 @@ func GetNocodesFromWeb(ctx context.Context, date string) (faceList []*Model.Code
 			}
 
 			Log.Info(fmt.Sprintf("date:%s page:%d  %d/%d", date, i+1, tObj.count, len(faceList)))
+			time.Sleep(5 * time.Second)
 			break
 		}
 	}

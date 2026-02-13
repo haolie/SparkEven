@@ -57,12 +57,14 @@ func startGather(ctx context.Context, startDate time.Time, imp *impl) (errStr Mo
 			break
 		}
 
+		imp.nextCookTime = imp.startTime
 		dateStr := date.Format("2006-01-02")
 		faceList, errStr := gatherDateFace(ctx, conn, dateStr)
 		if errStr.Exists() {
 			tempTimes += 1
 			Log.Error(fmt.Sprintf("gatherDateFace faild,date=%v times=%d errStr:%v", date, tempTimes, errStr))
 			if tempTimes <= maxErrTimes {
+				time.Sleep(time.Second * 5)
 				continue
 			}
 		}
@@ -99,6 +101,7 @@ func gatherDateFace(ctx context.Context, conn *sql.DB, dateStr string) (faceList
 		errStr = MPark.DbSupport.SaveFaceList(conn, faceList)
 	}
 
+	time.Sleep(2 * time.Second)
 	return faceList, errStr
 }
 

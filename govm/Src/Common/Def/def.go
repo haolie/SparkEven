@@ -24,6 +24,9 @@ const (
 	Config_Gather_Open      = "gather_open"
 	Config_Group_SavePath   = "group_savepath"
 
+	Config_CodeMaxDate = "CodeMaxDate"
+	Config_CodeMinDate = "CodeMinDate"
+
 	Model_Key_CodeFace = "CodeFace"
 
 	// http 接口

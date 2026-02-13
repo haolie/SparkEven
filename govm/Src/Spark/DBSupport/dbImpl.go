@@ -54,6 +54,14 @@ func (impl *mysqlImpl) GetDateCodePrice(conn *sql.DB, date string, code int) ([]
 	return searchPrice(conn, date, code)
 }
 
+func (impl *mysqlImpl) GetSysConfigList(conn *sql.DB) (list []*Model.SysConfig, err Model.Err) {
+	return getSysConfigs(conn)
+}
+
+func (impl *mysqlImpl) SaveSysConfig(conn *sql.DB, k, v string) (err Model.Err) {
+	return updateSysConfig(conn, k, v)
+}
+
 //
 //SearchCodeFace(date time.Time, code int) (list []*Model.CodeFace, err error)
 //SaveFaceList([]*Model.CodeFace) error

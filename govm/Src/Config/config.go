@@ -10,12 +10,19 @@ var (
 	isLoadFinished = false
 )
 
-func UpdateConfig(k string, v interface{}) {
+func AddConfig(k string, v interface{}) {
 	if isLoadFinished {
 		panic("")
 	}
 
 	configMap[k] = v
+}
+
+func UpdateConfig(k string, v interface{}) {
+	_, exists := configMap[k]
+	if exists {
+		configMap[k] = v
+	}
 }
 
 func GetValue[T int32 | int64 | string | bool](k string) (v T, exists bool) {

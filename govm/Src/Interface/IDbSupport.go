@@ -12,4 +12,6 @@ type IDbSupport interface {
 	SaveFacePrices(*sql.DB, *Model.CodeFace, []*Model.CodePrice) Model.Err
 	GetConn() (conn *sql.DB, errStr Model.Err)
 	GetDateCodePrice(*sql.DB, string, int) ([]*Model.CodePrice, Model.Err)
+	GetSysConfigList(conn *sql.DB) (list []*Model.SysConfig, err Model.Err)
+	SaveSysConfig(conn *sql.DB, k, v string) (err Model.Err)
 }

@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	jsoniter "github.com/json-iterator/go"
 )
 
 // GetShDateTime
@@ -66,4 +68,25 @@ func GetShDateTime() (t time.Time, err error) {
 
 	return
 
+}
+
+func CheckIsTransDate(dateStr string) (isTransDate bool, err error) {
+	url := "https://www.stockapi.com.cn/v1/base/tradeDate?tradeDate=" + dateStr
+	heads := make(map[string]string, 4)
+	heads["Accept"] = "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
+	heads["Accept-Language"] = "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7"
+	heads["Cache-Control"] = "no-cache"
+	heads["User-Agent"] = "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Mobile Safari/537.36"
+
+	data, err := HttpRequest(url, "GET", heads)
+
+	successStr := jsoniter.Get(data, "msg").ToString()
+	if successStr != "success" {
+		err = fmt.Errorf("CheckIsTransDate faild")
+		return
+	}
+
+	r1 := jsoniter.Get(data, "data", "isTradeDate").ToInt()
+	isTransDate = r1 == 1
+	return
 }

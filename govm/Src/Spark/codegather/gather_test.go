@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"SparkEven/govm/Src/Common/Tools"
 	"github.com/PuerkitoBio/goquery"
 )
 
@@ -20,7 +21,8 @@ func TestCodeDate(t *testing.T) {
 	//	fmt.Println(list)
 	//}
 
-	TryDate()
+	istrans, _ := Tools.CheckIsTransDate("2025-09-25")
+	fmt.Sprintln(istrans)
 
 	//str := "'15:00:00', '667400', '8.890', 'DOWN'"
 	//str = strings.Replace(str, "'", "", -1)
