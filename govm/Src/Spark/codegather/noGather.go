@@ -17,6 +17,7 @@ import (
 	"SparkEven/govm/Src/Common/Tools"
 	"SparkEven/govm/Src/Common/csv"
 	"SparkEven/govm/Src/Model"
+
 	"github.com/PuerkitoBio/goquery"
 	jsoniter "github.com/json-iterator/go"
 )
@@ -169,7 +170,7 @@ func getNoFun(token string, index int, perCount int, colConfigs map[string]*Col)
 	}
 
 	Log.Info(fmt.Sprintf("page=%d;count=%d \r\n", index, len(list)))
-	time.Sleep(time.Second * 1)
+	time.Sleep(time.Second * 30)
 
 	return
 }

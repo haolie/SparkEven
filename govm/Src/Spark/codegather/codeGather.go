@@ -51,6 +51,8 @@ func startGather(ctx context.Context, startDate time.Time, imp *impl) (errStr Mo
 		return errStr
 	}
 
+	defer conn.Close()
+
 	curDateStr := getCurCodeDate()
 	for {
 		if endDate.Before(date) {
@@ -80,8 +82,6 @@ func startGather(ctx context.Context, startDate time.Time, imp *impl) (errStr Mo
 		tempTimes = 0
 		date = date.AddDate(0, 0, 1)
 	}
-
-	conn.Close()
 
 	return errStr
 }
