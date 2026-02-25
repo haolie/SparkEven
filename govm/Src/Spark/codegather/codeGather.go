@@ -8,6 +8,7 @@ import (
 
 	"SparkEven/govm/Src/Common/Def"
 	"SparkEven/govm/Src/Common/Log"
+	"SparkEven/govm/Src/Common/Tools"
 	"SparkEven/govm/Src/Config"
 	"SparkEven/govm/Src/Model"
 	"SparkEven/govm/Src/Spark/MPark"
@@ -66,7 +67,7 @@ func startGather(ctx context.Context, startDate time.Time, imp *impl) (errStr Mo
 			tempTimes += 1
 			Log.Error(fmt.Sprintf("gatherDateFace faild,date=%v times=%d errStr:%v", date, tempTimes, errStr))
 			if tempTimes <= maxErrTimes {
-				time.Sleep(time.Second * 5)
+				Tools.Wait(ctx, 5, "gatherDateFaceErr")
 				continue
 			}
 		}
@@ -96,12 +97,13 @@ func gatherDateFace(ctx context.Context, conn *sql.DB, dateStr string) (faceList
 		return
 	}
 
+	//ctx, _ = context.WithTimeout(ctx, 3*time.Minute)
 	faceList, errStr = GetNocodesFromWeb(ctx, dateStr)
 	if !errStr.Exists() {
 		errStr = MPark.DbSupport.SaveFaceList(conn, faceList)
 	}
 
-	time.Sleep(2 * time.Second)
+	Tools.Wait(ctx, 2, "gatherDateFace")
 	return faceList, errStr
 }
 
@@ -143,7 +145,7 @@ func startPriceGather(ctx context.Context, conn *sql.DB, faceList []*Model.CodeF
 				Log.Debug(fmt.Sprintf("gatherFacePrice success code:%d   %d/%d", face.Code, i, count))
 			}
 
-			time.Sleep(con_gatherWait)
+			Tools.Wait(ctx, con_gatherWait, "startPriceGatherAfter")
 		}
 
 		onFinished(errMap, count, dateStr, failNum+1)

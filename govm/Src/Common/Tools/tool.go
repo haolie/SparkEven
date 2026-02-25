@@ -1,10 +1,13 @@
 package Tools
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
 	"time"
+
+	"SparkEven/govm/Src/Common/Log"
 )
 
 func ToTimeStr(t time.Time) string {
@@ -102,4 +105,24 @@ func Min(a int, b int) int {
 	} else {
 		return b
 	}
+}
+
+func LoopCtx(ctx context.Context, fn func() bool) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+
+		default:
+			if !fn() {
+				return
+			}
+		}
+	}
+}
+
+func Wait(ctx context.Context, sec int, node string) {
+	Log.Warn(fmt.Sprintf("%s wait %d", node, sec))
+	w, _ := context.WithTimeout(ctx, time.Second*time.Duration(sec))
+	<-w.Done()
 }

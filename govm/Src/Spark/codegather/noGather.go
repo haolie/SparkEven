@@ -22,6 +22,10 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
+const (
+	con_pagePerCount = 70
+)
+
 var (
 	columnConfigMap map[string]*Col
 )
@@ -81,13 +85,16 @@ func getToken(ctx context.Context, date string) (result *tokenObj, er Model.Err)
 
 		if err != nil {
 			er = Model.Err(fmt.Sprintf("codegather.getToken json.Unmarshal err=%v content=%s", err, string(resultByte)))
+			resetCook(false)
 		}
+
+		return
 	}
 
 	return
 }
 
-func getNoFun(token string, index int, perCount int, colConfigs map[string]*Col) (list []*Model.CodeFace, errStr Model.Err) {
+func getNoFun(token string, gCtx *codeGatherCtx) (list []*Model.CodeFace, errStr Model.Err) {
 
 	newCookStr, errStr := waitCookStr(context.Background())
 	if errStr.Exists() {
@@ -96,7 +103,7 @@ func getNoFun(token string, index int, perCount int, colConfigs map[string]*Col)
 
 	client := &http.Client{}
 	list = []*Model.CodeFace{}
-	url := fmt.Sprintf("%s%s%s%d%s%d%s", "http://www.iwencai.com/stockpick/cache?token=", token, "&p=", index, "&perpage=", perCount, "&showType=[%22%22,%22%22,%22onTable%22,%22onTable%22,%22onTable%22,%22onTable%22]")
+	url := fmt.Sprintf("%s%s%s%d%s%d%s", "http://www.iwencai.com/stockpick/cache?token=", token, "&p=", gCtx.pageIndex, "&perpage=", con_pagePerCount, "&showType=[%22%22,%22%22,%22onTable%22,%22onTable%22,%22onTable%22,%22onTable%22]")
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		errStr = Model.Err(fmt.Sprintf("getNoFun err: NewRequest fail, %s", err.Error()))
@@ -126,7 +133,7 @@ func getNoFun(token string, index int, perCount int, colConfigs map[string]*Col)
 	hasRows := false
 	for i := 0; ; i++ {
 		if i >= 100 {
-			errStr = "getNoFun try 100 times"
+			errStr = Model.Err(fmt.Sprintf("getNoFun try %d times", i))
 			return
 		}
 
@@ -134,15 +141,16 @@ func getNoFun(token string, index int, perCount int, colConfigs map[string]*Col)
 		if len(codeStr) == 0 {
 			// 如果已有数据行 标识该页爬取已结束
 			if !hasRows {
-				time.Sleep(time.Second * 2)
-				Log.Error(url)
-				errStr = Model.Err(fmt.Sprintf("getNoFun err: bodyRead fail,body=%s", string(resultStr)))
-
+				Tools.Wait(context.Background(), 2, "getNoFunErr")
+				es := fmt.Sprintf("getNoFun err: bodyRead fail,url=%s body=%s", url, string(resultStr))
+				errStr = Model.Err(es)
+				Log.Error(es)
 				return
 			}
 			break
 		}
 
+		colConfigs := gCtx.clMap
 		// 标记有数据行
 		hasRows = true
 		if r1.Get(i, colConfigs[Col_Ud].index).ToString() == "--" ||
@@ -169,8 +177,8 @@ func getNoFun(token string, index int, perCount int, colConfigs map[string]*Col)
 		list = append(list, &temp)
 	}
 
-	Log.Info(fmt.Sprintf("page=%d;count=%d \r\n", index, len(list)))
-	time.Sleep(time.Second * 30)
+	Log.Info(fmt.Sprintf("page=%d;count=%d \r\n", gCtx.pageIndex, len(list)))
+	Tools.Wait(context.Background(), 20, "getNoFunAfter")
 
 	return
 }
@@ -188,27 +196,36 @@ func createColMap() map[string]*Col {
 	return m
 }
 
-func GetNocodesFromWeb(ctx context.Context, date string) (faceList []*Model.CodeFace, errStr Model.Err) {
+func createCtx(ctx context.Context, date string) (gCtx *codeGatherCtx, errStr Model.Err) {
 
 	tObj, errStr := getToken(ctx, date)
 	if errStr.Exists() {
 		return
 	}
 
-	perCount := 70
+	perCount := con_pagePerCount
 	pageCount := tObj.count / perCount
 	if tObj.count%perCount > 0 {
 		pageCount++
 	}
 
-	clMaps := createColMap()
-	for k, c := range clMaps {
+	gCtx = &codeGatherCtx{
+		dateStr:    date,
+		pageIndex:  1,
+		pageCount:  int32(pageCount),
+		totalCount: int32(tObj.count),
+		clMap:      createColMap(),
+		faceMap:    make(map[int]struct{}, tObj.count),
+		faceList:   make([]*Model.CodeFace, 0, tObj.count),
+	}
+
+	for k, c := range gCtx.clMap {
 		var find bool
 		for i, cl := range tObj.columns {
 			if cl.Index_name == c.name {
 				find = true
 				c.index = i
-				clMaps[k].index = i
+				gCtx.clMap[k].index = i
 
 				if c.dateCheck && cl.Timestamp != strings.Replace(date, "-", "", -1) {
 					errStr = Model.Err(fmt.Sprintf("数据时间不匹配  列名:%s  数据时间:%s  目标时间:%s  ", c.name, cl.Timestamp, date))
@@ -222,48 +239,75 @@ func GetNocodesFromWeb(ctx context.Context, date string) (faceList []*Model.Code
 		}
 	}
 
-	faceList = make([]*Model.CodeFace, 0, tObj.count)
-	existsMap := make(map[int]struct{})
-	for i := 0; i < pageCount; i++ {
-		// 每请求15次后刷新cookie
-		if (i+1)%15 == 0 {
-			// 清空cookie 后重启获取token
-			resetCook(false)
-			tObj, errStr = getToken(ctx, date)
-			if errStr.Exists() {
-				return
-			}
+	return
+}
+
+func fromWeb(ctx context.Context, gCtx *codeGatherCtx) (errStr Model.Err) {
+	var tObj *tokenObj
+	tObj, errStr = getToken(ctx, gCtx.dateStr)
+	if errStr.Exists() {
+		resetCook(false)
+		return
+	}
+
+	Tools.LoopCtx(ctx, func() bool {
+		if gCtx.pageIndex >= gCtx.pageCount {
+			return false
 		}
 
-		// 因cookie 可能失效  尝试25次
-		for t := 0; t < 25; t++ {
+		// 因cookie 可能失效  尝试5次
+		for t := 0; t < 5; t++ {
 			var list []*Model.CodeFace
-			list, errStr = getNoFun(tObj.token, i+1, perCount, clMaps)
+			list, errStr = getNoFun(tObj.token, gCtx)
 			if errStr.Exists() {
 				resetCook(false)
-				tObj, errStr = getToken(ctx, date)
+				tObj, errStr = getToken(ctx, gCtx.dateStr)
 				continue
 			}
 
 			for _, face := range list {
-				face.Date = date
-				_, ex := existsMap[face.Code]
+				face.Date = gCtx.dateStr
+				_, ex := gCtx.faceMap[face.Code]
 				if ex {
 					fmt.Printf("repead:%d \r\n", face.Code)
 				}
 
-				existsMap[face.Code] = struct{}{}
-				faceList = append(faceList, face)
+				gCtx.faceMap[face.Code] = struct{}{}
+				gCtx.faceList = append(gCtx.faceList, face)
 			}
 
-			Log.Info(fmt.Sprintf("date:%s page:%d  %d/%d", date, i+1, tObj.count, len(faceList)))
-			time.Sleep(5 * time.Second)
+			Log.Info(fmt.Sprintf("date:%s page:%d  %d/%d", gCtx.dateStr, gCtx.pageIndex, tObj.count, len(gCtx.faceList)))
+			gCtx.pageIndex += 1
+			//return false
 			break
+
 		}
+
+		return !errStr.Exists()
+	})
+
+	return
+}
+
+func GetNocodesFromWeb(ctx context.Context, date string) (faceList []*Model.CodeFace, errStr Model.Err) {
+
+	gCtx, es := createCtx(ctx, date)
+	if es.Exists() {
+		errStr = es
+		return
 	}
 
-	Log.Info(fmt.Sprintf("gatherFinished date=%s  num=%d  total=%d", date, len(faceList), tObj.count))
-	resetCook(false)
+	Tools.LoopCtx(ctx, func() bool {
+		errStr = fromWeb(ctx, gCtx)
+		if !errStr.Exists() {
+			faceList = gCtx.faceList
+			return false
+		}
+
+		Tools.Wait(ctx, 50, "GetNocodesFromWeb")
+		return true
+	})
+
 	return
 }
 

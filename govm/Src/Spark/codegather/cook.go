@@ -8,6 +8,7 @@ import (
 
 	"SparkEven/govm/Src/Common/Def"
 	"SparkEven/govm/Src/Common/Log"
+	"SparkEven/govm/Src/Common/Tools"
 	"SparkEven/govm/Src/Model"
 )
 
@@ -41,7 +42,7 @@ func waitCookStr(ctx context.Context) (cookieStr string, er Model.Err) {
 			}
 
 			Log.Warn(fmt.Sprintf("waitCookStr cookStr:%s  newStr:%s  exprieTime:%v", cookStr, newCookStr, cookExpireTime))
-			time.Sleep(time.Second)
+			Tools.Wait(ctx, 1, "waitCookStr")
 		}
 	}
 }

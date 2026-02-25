@@ -14,7 +14,7 @@ import (
 
 const (
 	// 价格采集间隔时间（秒
-	con_gatherWait = 1200 * time.Millisecond
+	con_gatherWait = 12
 )
 
 var (
