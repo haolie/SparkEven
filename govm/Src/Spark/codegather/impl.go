@@ -14,7 +14,16 @@ import (
 
 const (
 	// 价格采集间隔时间（秒
-	con_gatherWait = 12
+	con_gatherWait = 10
+
+	// 采集结束时间（早上7点
+	con_gatherEndTime = 7
+
+	// cookie刷新时间（秒
+	con_cookieFreshTime = 20
+
+	// 分组数量
+	con_groupSubCount = 400
 )
 
 var (
@@ -60,13 +69,13 @@ func (impl *impl) StartCodeGather(ctx context.Context, stateDate time.Time) (err
 		now := time.Now()
 		impl.startTime = getStartTime(now)
 		impl.nextCookTime = impl.startTime
-		if impl.startTime.Before(now) {
-			Log.Info("------start start start -----")
-			startGather(ctx, stateDate, impl)
-			Log.Info("------end end end -----")
-			impl.startTime = impl.startTime.AddDate(0, 0, 1)
-			impl.nextCookTime = impl.startTime
-		}
+		//if impl.startTime.Before(now) {
+		//	Log.Info("------start start start -----")
+		//	startGather(ctx, stateDate, impl)
+		//	Log.Info("------end end end -----")
+		//	impl.startTime = impl.startTime.AddDate(0, 0, 1)
+		//	impl.nextCookTime = impl.startTime
+		//}
 
 		//runTime := now.Add(-time.Duration(now.Minute()%30*60+now.Second()) * time.Second)
 		for {
@@ -77,7 +86,12 @@ func (impl *impl) StartCodeGather(ctx context.Context, stateDate time.Time) (err
 				break
 			case <-time.After(impl.startTime.Sub(time.Now())):
 				Log.Info("------start start start -----")
-				tx, _ := context.WithTimeout(ctx, time.Hour*7)
+				// 下一日早上7点结束
+				endTime := Tools.GetDate(impl.startTime).AddDate(0, 0, 1).Add(time.Hour * con_gatherEndTime)
+				Log.Info(fmt.Sprintf("------plan to end :%v -----", endTime))
+				tx, _ := context.WithTimeout(ctx, endTime.Sub(time.Now()))
+
+				Log.Info(fmt.Sprintf("impl.nextCookTime:%v ", impl.nextCookTime))
 				startGather(tx, stateDate, impl)
 				Log.Info("------end end end -----")
 				impl.startTime = impl.startTime.AddDate(0, 0, 1)
@@ -100,7 +114,7 @@ func (impl *impl) FillCookie(cookie string) int {
 	if impl.nextCookTime.After(n) {
 		return int(impl.nextCookTime.Sub(n).Seconds())
 	} else {
-		return 20
+		return con_cookieFreshTime
 	}
 }
 
@@ -110,7 +124,7 @@ func (impl impl) CodeGroup(date string) (err Model.Err) {
 		return
 	}
 
-	group := CreateGroupper(date, savePath, 400)
+	group := CreateGroupper(date, savePath, con_groupSubCount)
 	group.Start(context.Background())
 
 	return

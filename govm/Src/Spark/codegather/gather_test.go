@@ -1,6 +1,7 @@
 package codegather
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"SparkEven/govm/Src/Common/Tools"
+
 	"github.com/PuerkitoBio/goquery"
 )
 
@@ -234,4 +236,25 @@ func TryDate() (err error) {
 	//}
 
 	return err
+}
+
+func TestStart(t *testing.T) {
+	ctx, _ := context.WithTimeout(context.Background(), time.Minute*4)
+
+	startTime := time.Now().Add(-time.Second * 10)
+	fmt.Println("---start---")
+	i := 0
+	for {
+		d := startTime.Sub(time.Now())
+		select {
+		case <-ctx.Done():
+			fmt.Printf("TestStart  Finished  Num:%v \r\n", i)
+			fmt.Println("---end---")
+			return
+		case <-time.After(d):
+			i++
+			startTime = startTime.Add(time.Minute)
+			fmt.Printf("TestStart  nextTime:L%v  \r\n", startTime)
+		}
+	}
 }

@@ -107,15 +107,19 @@ func Min(a int, b int) int {
 	}
 }
 
-func LoopCtx(ctx context.Context, fn func() bool) {
+func LoopCtx(ctx context.Context, fn func() bool, doneCb func()) bool {
 	for {
 		select {
 		case <-ctx.Done():
-			return
+			if doneCb != nil {
+				doneCb()
+			}
+
+			return true
 
 		default:
 			if !fn() {
-				return
+				return false
 			}
 		}
 	}
@@ -124,5 +128,12 @@ func LoopCtx(ctx context.Context, fn func() bool) {
 func Wait(ctx context.Context, sec int, node string) {
 	Log.Warn(fmt.Sprintf("%s wait %d", node, sec))
 	w, _ := context.WithTimeout(ctx, time.Second*time.Duration(sec))
+	<-w.Done()
+}
+
+func HunUpAfter(ctx context.Context, sec int, node string, fn func()) {
+	w, _ := context.WithTimeout(ctx, time.Second*time.Duration(sec))
+	fn()
+	//Log.Warn(fmt.Sprintf("%s HunUpAfter %d", node, sec))
 	<-w.Done()
 }

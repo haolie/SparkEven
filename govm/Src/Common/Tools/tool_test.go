@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 )
 
 func TestLoopCtx(t *testing.T) {
@@ -16,7 +17,7 @@ func TestLoopCtx(t *testing.T) {
 		}
 
 		return i < 100
-	})
+	}, nil)
 
 	if i != 10 {
 		t.Errorf("loopCtx fail A")
@@ -26,10 +27,21 @@ func TestLoopCtx(t *testing.T) {
 	LoopCtx(ctx, func() bool {
 		i++
 		return i < 100
-	})
+	}, nil)
 
 	if i != 100 {
 		fmt.Println(i)
 		t.Errorf("loopCtx fail B")
 	}
+}
+
+func TestHunUpAfter(t *testing.T) {
+	t1 := time.Now()
+	HunUpAfter(context.Background(), 10, "TestHunUpAfter", func() {
+		time.Sleep(time.Second * time.Duration(12))
+	})
+
+	t2 := time.Now()
+	s := t2.Sub(t1).Seconds()
+	fmt.Println(s)
 }

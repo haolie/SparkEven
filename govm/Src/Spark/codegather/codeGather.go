@@ -18,9 +18,14 @@ const (
 	mName = "codeGather"
 )
 
+// 采集最早日期
+var minDate time.Time
+
 func init() {
 	MPark.CodeGather = NewImpl()
 	MPark.RegisterLoad(mName, onLoad)
+
+	minDate = time.Date(2020, 1, 1, 0, 0, 0, 0, time.Local)
 }
 
 func onLoad(ctx context.Context) []string {
@@ -35,10 +40,9 @@ func onLoad(ctx context.Context) []string {
 
 func startGather(ctx context.Context, startDate time.Time, imp *impl) (errStr Model.Err) {
 	resetCook(true)
-	Log.Info(fmt.Sprintf("start gather startDate:%v", startDate))
+
 	n := time.Now()
-	n = time.Date(n.Year(), n.Month(), n.Day(), 0, 0, 0, 0, time.Local)
-	endDate := n.AddDate(0, 0, 1)
+	n = Tools.GetDate(n)
 	date := startDate
 	var tempTimes int64
 	maxErrTimes, exists := Config.GetValue[int64](Def.Config_Gather_FailTimes)
@@ -54,36 +58,39 @@ func startGather(ctx context.Context, startDate time.Time, imp *impl) (errStr Mo
 
 	defer conn.Close()
 
+	// 获取当日交易日期
 	curDateStr := getCurCodeDate()
-	for {
-		if endDate.Before(date) {
-			break
+	Tools.LoopCtx(ctx, func() bool {
+		if minDate.After(date) {
+			return false
 		}
 
 		imp.nextCookTime = imp.startTime
 		dateStr := date.Format("2006-01-02")
+		Log.Info(fmt.Sprintf("start gather startDate:%v", dateStr))
 		faceList, errStr := gatherDateFace(ctx, conn, dateStr)
 		if errStr.Exists() {
 			tempTimes += 1
 			Log.Error(fmt.Sprintf("gatherDateFace faild,date=%v times=%d errStr:%v", date, tempTimes, errStr))
 			if tempTimes <= maxErrTimes {
 				Tools.Wait(ctx, 5, "gatherDateFaceErr")
-				continue
+				return true
 			}
 		}
 
-		imp.nextCookTime = imp.startTime.AddDate(0, 0, 1)
 		if len(faceList) > 0 && dateStr == curDateStr {
-			errStr = startPriceGather(ctx, conn, faceList, dateStr)
-			if errStr.Exists() {
-				Log.Error(string(errStr))
-			}
+			go startPriceGather(ctx, faceList, dateStr)
 		}
 
-		tempTimes = 0
-		date = date.AddDate(0, 0, 1)
-	}
+		return false
+		//tempTimes = 0
+		//date = date.AddDate(0, 0, 1)
+		//return true
+	}, func() {
+		Log.Info(fmt.Sprintf("startGather ctx.Down"))
+	})
 
+	imp.nextCookTime = imp.startTime.AddDate(0, 0, 1)
 	return errStr
 }
 
@@ -107,52 +114,68 @@ func gatherDateFace(ctx context.Context, conn *sql.DB, dateStr string) (faceList
 	return faceList, errStr
 }
 
-func startPriceGather(ctx context.Context, conn *sql.DB, faceList []*Model.CodeFace, dateStr string) (errStr Model.Err) {
+func startPriceGather(ctx context.Context, faceList []*Model.CodeFace, dateStr string) {
 	count := len(faceList)
 	tryTimes, exists := Config.GetValue[int64](Def.Config_Gather_FailTimes)
 	if !exists {
 		panic(fmt.Errorf("need %s Config", Def.Config_Gather_FailTimes))
 	}
 
+	conn, errStr := MPark.DbSupport.GetConn()
+	if errStr.Exists() {
+		Log.Error(string(errStr))
+	}
+
+	defer conn.Close()
+
 	// 如有采集失败 重复尝试次数
 	var failNum int64 = 0
-	for ; failNum < tryTimes; failNum++ {
-		errMap := make(map[int]Model.Err, 8)
-		for i, face := range faceList {
-			if face.State == 1 {
-				continue
-			}
-
-			priceList, faceErr := gatherFacePrice(face)
-			if faceErr.Exists() {
-				errMap[face.Code] = faceErr
-				continue
-			}
-
-			if len(priceList) == 0 {
-				continue
-			}
-
-			faceErr = MPark.DbSupport.SaveFacePrices(conn, face, priceList)
-			if faceErr.Exists() {
-				errMap[face.Code] = faceErr
-				continue
-			}
-
-			if i%100 == 0 {
-				Log.Info(fmt.Sprintf("gatherFacePrice success code:%d   %d/%d", face.Code, i, count))
-			} else {
-				Log.Debug(fmt.Sprintf("gatherFacePrice success code:%d   %d/%d", face.Code, i, count))
-			}
-
-			Tools.Wait(ctx, con_gatherWait, "startPriceGatherAfter")
+	var index int
+	errMap := make(map[int]Model.Err, 8)
+	Tools.LoopCtx(ctx, func() bool {
+		// 超失败次数 || 采集结束
+		if failNum >= tryTimes || index >= count {
+			onFinished(errMap, count, dateStr, failNum+1)
+			return false
 		}
 
-		onFinished(errMap, count, dateStr, failNum+1)
-		if len(errMap) == 0 {
-			break
+		curIndex := index
+		index += 1
+		face := faceList[curIndex]
+		// 跳过已采集
+		if face.State == 1 {
+			return true
 		}
-	}
+
+		// 采集价格
+		priceList, faceErr := gatherFacePrice(face)
+		if faceErr.Exists() {
+			errMap[face.Code] = faceErr
+			return true
+		}
+
+		if len(priceList) == 0 {
+			return true
+		}
+
+		// 保存数据库
+		faceErr = MPark.DbSupport.SaveFacePrices(conn, face, priceList)
+		if faceErr.Exists() {
+			errMap[face.Code] = faceErr
+			return true
+		}
+
+		if curIndex%100 == 0 {
+			Log.Info(fmt.Sprintf("gatherFacePrice success code:%d   %d/%d", face.Code, curIndex, count))
+		} else {
+			Log.Debug(fmt.Sprintf("gatherFacePrice success code:%d   %d/%d", face.Code, curIndex, count))
+		}
+
+		Tools.Wait(ctx, con_gatherWait, "startPriceGatherAfter")
+		return true
+	}, func() {
+		Log.Info(fmt.Sprintf("startPriceGather ctx.Down"))
+	})
 
 	return
 }

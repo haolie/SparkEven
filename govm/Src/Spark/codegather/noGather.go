@@ -35,13 +35,19 @@ func init() {
 }
 
 func getToken(ctx context.Context, date string) (result *tokenObj, er Model.Err) {
-	for i := 0; i < 10; i++ {
+	i := 0
+	Tools.LoopCtx(ctx, func() bool {
+		if i >= 10 {
+
+			Log.Warn(fmt.Sprintf("getToken loopOut failed times %v", i))
+			return false
+		}
+
+		i++
 		var cookieStr string
 		cookieStr, er = waitCookStr(ctx)
 		result = &tokenObj{}
 
-		//cookieStr = "other_uid=Ths_iwencai_Xuangu_e5fmb9qchj3cm6xv3l4nelwsyrp68w1b; ta_random_userid=1mloc8i7wd; cid=481a7d61536bcfeabf2484348407282e1736501850; u_ukey=A10702B8689642C6BE607730E11E6E4A; u_uver=1.0.0; u_dpass=dXNNRcqmggrrHl%2BbDMF6kabLkCS3lvXho4XHaD%2B0IYy5JFpH92JkrfXMX5U3obovHi80LrSsTFH9a%2B6rtRvqGg%3D%3D; u_did=3ADAE2A5B02C4FAC9BF2F0D5C7756EC8; u_ttype=WEB; ttype=WEB; user=MDpoYW9saWU6Ok5vbmU6NTAwOjI3NDUwMjY2MDo3LDExMTExMTExMTExLDQwOzQ0LDExLDQwOzYsMSw0MDs1LDEsNDA7MSwxMDEsNDA7MiwxLDQwOzMsMSw0MDs1LDEsNDA7OCwwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMSw0MDsxMDIsMSw0MDoyNzo6OjI2NDUwMjY2MDoxNzM5NDM2NjAzOjo6MTQzMzc3NjAyMDo2MDQ4MDA6MDoxZTUzY2U1MDdhZGQyMGE3MGZjYmIyMjkwZjQ1ODUyZGY6ZGVmYXVsdF80OjA%3D; userid=264502660; u_name=haolie; escapename=haolie; ticket=9c547d07a178c0acfffa1aa1a200e9d6; user_status=0; utk=71d6ea1e97d4d942da4f56e1f01508ac; PHPSESSID=93ab62e95d8fef90927b10df56e98b25; cid=481a7d61536bcfeabf2484348407282e1736501850; ComputerID=481a7d61536bcfeabf2484348407282e1736501850; WafStatus=0; v=A-uvOxpICJ-pvVRLjndFb9zJegTQAP-CeRTDNl1oxyqB_AX65dCP0onkU55u"
-		client := &http.Client{}
 		var url = "http://www.iwencai.com/stockpick/load-data?typed=0&preParams=&ts=1&f=1&qs=result_original&selfsectsn=&querytype=stock&searchfilter=&tid=stockpick&w=%E6%B6%A8%E8%B7%8C" +
 			date +
 			"+%E4%BB%B7%E6%A0%BC" +
@@ -52,31 +58,53 @@ func getToken(ctx context.Context, date string) (result *tokenObj, er Model.Err)
 			date +
 			"+&queryarea="
 
-		request, err := http.NewRequest("GET", url, nil)
-		request.Header.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7")
-		//request.Header.Add("Accept-Encoding", "gzip, deflate, br, zstd")
-		request.Header.Add("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7")
-		request.Header.Add("Cache-Control", "no-cache")
-		request.Header.Add("Connection", "keep-alive")
-		request.Header.Add("Host", "www.iwencai.com")
-		request.Header.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36")
-		request.Header.Add("Cookie", cookieStr)
-		resp, err := client.Do(request)
+		headers := make(map[string]string, 8)
+
+		//	GET /stockpick/load-data?typed=0&preParams=&ts=1&f=1&qs=result_original&selfsectsn=&querytype=stock&searchfilter=&tid=stockpick&w=%E6%B6%A8%E8%B7%8C2026-02-26+%E4%BB%B7%E6%A0%BC2026-02-26+%E6%88%90%E4%BA%A4%E9%87%8F2026-02-26+%E6%8D%A2%E6%89%8B2026-02-26+&queryarea= HTTP/1.1
+		//Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+		headers["Accept"] = "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
+		//	Accept-Encoding: gzip, deflate, br, zstd
+		//headers["Accept-Encoding"] = "gzip, deflate, br, zstd"
+		//	Accept-Language: zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7
+		headers["Accept-Language"] = "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7"
+		//	Cache-Control: max-age=0
+		headers["Cache-Control"] = "max-age=0"
+		//	Connection: keep-alive
+		headers["Connection"] = "keep-alive"
+		//	Cookie: cid=481a7d61536bcfeabf2484348407282e1736501850; ComputerID=481a7d61536bcfeabf2484348407282e1736501850; WafStatus=0; u_ukey=A10702B8689642C6BE607730E11E6E4A; u_uver=1.0.0; u_dpass=bqtFa7hjOl%2BiRh7cUC5dpQw1UX9TpSjuF%2FjicNkkheHOSQgrgVkmI%2B%2BmvYNIeqp6Hi80LrSsTFH9a%2B6rtRvqGg%3D%3D; u_did=5C977C9FB2F140429E51D2D6C31A810A; u_ttype=WEB; other_uid=Ths_iwencai_Xuangu_phqw1wjmevgbyhvt57e7pz93gucdmdea; ta_random_userid=xeaawsvxop; user=MDpoYW9saWU6Ok5vbmU6NTAwOjI3NDUwMjY2MDo3LDExMTExMTExMTExLDQwOzQ0LDExLDQwOzYsMSw0MDs1LDEsNDA7MSwxMDEsNDA7MiwxLDQwOzMsMSw0MDs1LDEsNDA7OCwwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMSw0MDsxMDIsMSw0MDoyNzo6OjI2NDUwMjY2MDoxNzcyMDA0OTU1Ojo6MTQzMzc3NjAyMDo2MDQ4MDA6MDoxZTQwYzZlYzRlODZkNzU5YzQ1NjM4MDg5Y2U3NjYzZGM6ZGVmYXVsdF81OjA%3D; userid=264502660; u_name=haolie; escapename=haolie; ticket=c84c7cbeff979ff7c1d198ee03e4ae26; user_status=0; utk=bb96658365d4f5e236d6dc7c9a926438; sess_tk=eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiIsImtpZCI6InNlc3NfdGtfMSIsImJ0eSI6InNlc3NfdGsifQ.eyJqdGkiOiJkYzYzNzZjZTg5ODA2MzQ1OWM3NTZkZThjNDZlMGNlNDEiLCJpYXQiOjE3NzIwMDQ5NTUsImV4cCI6MTc3MjYwOTc1NSwic3ViIjoiMjY0NTAyNjYwIiwiaXNzIjoidXBhc3MuaXdlbmNhaS5jb20iLCJhdWQiOiIyMDIwMTExODUyODg5MDcyIiwiYWN0Ijoib2ZjIiwiY3VocyI6ImE2M2IyOWVmYWY5Y2EyMmYxNDJhM2Q3ZDhmOTA3YzYxODNhNWNjN2Q4ZmE5ZGQ2MDk0MzFkYjk4NmY4YTNhZWYifQ.6BpLWnmm02urYx6BuBIZ0fz6HnWYIPMeK2nG09Lz9wDbOPIsaC0nw8xObv1wBcqVuxQNmsGJfZ87Rjd9BgzK1Q; cuc=pv1exa0r25ol; THSSESSID=ac6584e3b2859910ff6df5b038; PHPSESSID=e1e429b65daae73c9dbc46ce58f987d6; _clck=bllxsm%7C2%7Cg3w%7C0%7C0; v=AyFlmXQG7G_Ji0CbCgofNaQcMOY-zpXAv0I51IP2HSiH6k8Yyx6lkE-SSaoQ; _clsk=zz6imo1qgsq6%7C1772091822130%7C27%7C1%7C; _clsk=zz6imo1qgsq6%7C1772091822130%7C27%7C1%7C; _clsk=zz6imo1qgsq6%7C1772091822130%7C27%7C1%7C
+		headers["Cookie"] = cookieStr
+		//	Host: www.iwencai.com
+		headers["Host"] = "www.iwencai.com"
+		//	Sec-Fetch-Dest: document
+		headers["Sec-Fetch-Dest"] = "document"
+		//	Sec-Fetch-Mode: navigate
+		headers["Sec-Fetch-Mode"] = "navigate"
+		//	Sec-Fetch-Site: none
+		headers["Sec-Fetch-Site"] = "none"
+		//	Sec-Fetch-User: ?1
+		headers["Sec-Fetch-User"] = "?1"
+		//	Upgrade-Insecure-Requests: 1
+		headers["Upgrade-Insecure-Requests"] = "1"
+		//	User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36
+		headers["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
+		//	sec-ch-ua: "Not(A:Brand";v="8", "Chromium";v="144", "Google Chrome";v="144"
+		headers["sec-ch-ua"] = "\"Not(A:Brand\";v=\"8\", \"Chromium\";v=\"144\", \"Google Chrome\";v=\"144\""
+		//	sec-ch-ua-mobile: ?0
+		headers["sec-ch-ua-mobile"] = "?0"
+		//	sec-ch-ua-platform: "Windows"
+		headers["sec-ch-ua-platform"] = "Windows"
+
+		data, err := Tools.HttpRequest(url, "GET", headers)
 		if err != nil {
-			er = Model.Err(fmt.Sprintf("codegather.getToken client.Do err=%v", err))
-			resetCook(false)
-			continue
+			er = Model.Err(fmt.Sprintf("codegather.getToken client.Do err=%v url=%v cookie=%v", err, url, cookieStr))
+			Log.Error(string(er))
+			resetCook(true)
+
+			Tools.Wait(context.Background(), 30, "codegather.getTokenErr")
+			return true
 		}
 
-		defer resp.Body.Close()
-		resultByte, err := io.ReadAll(resp.Body)
-		if err != nil {
-			er = Model.Err(fmt.Sprintf("codegather.getToken io.ReadAll err=%v", err))
-			resetCook(false)
-			continue
-		}
-
-		r1 := jsoniter.Get(resultByte, "data", "result")
+		r1 := jsoniter.Get(data, "data", "result")
 		count, _ := strconv.Atoi(r1.Get("code_count").ToString())
 		result.count = count
 		result.token = r1.Get("token").ToString()
@@ -84,12 +112,18 @@ func getToken(ctx context.Context, date string) (result *tokenObj, er Model.Err)
 		err = json.Unmarshal(jsonBlob, &result.columns)
 
 		if err != nil {
-			er = Model.Err(fmt.Sprintf("codegather.getToken json.Unmarshal err=%v content=%s", err, string(resultByte)))
+			er = Model.Err(fmt.Sprintf("codegather.getToken json.Unmarshal err=%v content=%s url=%v cookie=%v", err, string(data), url, cookieStr))
+			Log.Error(string(er))
 			resetCook(false)
+
+			Tools.Wait(context.Background(), 30, "codegather.getToken json.Unmarshal ")
+			return true
 		}
 
-		return
-	}
+		return false
+	}, func() {
+		Log.Info(fmt.Sprintf("getToken ctx.Down"))
+	})
 
 	return
 }
@@ -284,6 +318,8 @@ func fromWeb(ctx context.Context, gCtx *codeGatherCtx) (errStr Model.Err) {
 		}
 
 		return !errStr.Exists()
+	}, func() {
+		Log.Info(fmt.Sprintf("fromWeb ctx.Down"))
 	})
 
 	return
@@ -306,6 +342,8 @@ func GetNocodesFromWeb(ctx context.Context, date string) (faceList []*Model.Code
 
 		Tools.Wait(ctx, 50, "GetNocodesFromWeb")
 		return true
+	}, func() {
+		Log.Info(fmt.Sprintf("GetNocodesFromWeb ctx.Down"))
 	})
 
 	return
