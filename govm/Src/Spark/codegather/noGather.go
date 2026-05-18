@@ -112,8 +112,14 @@ func getToken(ctx context.Context, date string) (result *tokenObj, er Model.Err)
 		err = json.Unmarshal(jsonBlob, &result.columns)
 
 		if err != nil {
-			er = Model.Err(fmt.Sprintf("codegather.getToken json.Unmarshal err=%v content=%s url=%v cookie=%v", err, string(data), url, cookieStr))
+			er = Model.Err(fmt.Sprintf("codegather.getToken json.Unmarshal err=%v content=%s cookie=%v", err, string(data), cookieStr))
 			Log.Error(string(er))
+			Log.Error("----------")
+			Log.Error("----------")
+			Log.Error("----------")
+			Log.Info(url)
+			Log.Error("")
+			Log.Error("")
 			resetCook(false)
 
 			Tools.Wait(context.Background(), 30, "codegather.getToken json.Unmarshal ")

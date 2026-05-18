@@ -14,7 +14,7 @@ import (
 
 const (
 	// 价格采集间隔时间（秒
-	con_gatherWait = 10
+	con_gatherWait = 7
 
 	// 采集结束时间（早上7点
 	con_gatherEndTime = 7
